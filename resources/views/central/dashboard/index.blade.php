@@ -1,32 +1,3 @@
-@php
-// Simulação de dados de clientes (ERPs)
-$erps = [
-[
-'name' => 'ImobSystem Pro',
-'users' => 125,
-'contracts' => 450,
-'properties' => 210
-],
-[
-'name' => 'Agile Imóveis',
-'users' => 80,
-'contracts' => 300,
-'properties' => 155
-],
-[
-'name' => 'Solução Imobiliária',
-'users' => 205,
-'contracts' => 890,
-'properties' => 540
-],
-[
-'name' => 'ImobEasy',
-'users' => 45,
-'contracts' => 150,
-'properties' => 95
-],
-];
-@endphp
 @extends('layouts.app')
 @section('content')
 <div class="page-header d-print-none">
@@ -51,7 +22,7 @@ $erps = [
                <div class="card-body">
                   <div class="d-flex align-items-center mb-3">
                      <div>
-                        <h1 class="display-3 me-2">{{ count($erps) }}</h1>
+                        <h1 class="display-3 me-2">{{ count($tenants) }}</h1>
                         <div class="text-muted">{{ __('Total de Softwares (ERPs)') }}</div>
                      </div>
                   </div>
@@ -77,21 +48,21 @@ $erps = [
                               <th>{{ __('Usuários') }}</th>
                               <th>{{ __('Contratos') }}</th>
                               <th>{{ __('Imóveis') }}</th>
+                              <th>Ação</th>
                            </tr>
                         </thead>
                         <tbody>
-                           @foreach ($erps as $erp)
+                           @foreach ($tenants as $tenant)
                            <tr>
-                              <td>{{ $erp['name'] }}</td>
+                              <td>{{ $tenant['name'] }}</td>
+                              <td>{{ $tenant['name'] }}</td>
                               <td>
-                                 <span class="badge bg-primary-lt">{{ $erp['users'] }}</span>
+                                 <span class="badge bg-green-lt">0</span>
                               </td>
                               <td>
-                                 <span class="badge bg-green-lt">{{ $erp['contracts'] }}</span>
+                                 <span class="badge bg-azure-lt">0</span>
                               </td>
-                              <td>
-                                 <span class="badge bg-azure-lt">{{ $erp['properties'] }}</span>
-                              </td>
+                              <td><a href="{{route('dashboard.impersonate', [$tenant->id, 1])}}">acessar</a></td>
                            </tr>
                            @endforeach
                         </tbody>
