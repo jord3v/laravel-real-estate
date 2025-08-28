@@ -12,6 +12,8 @@ foreach (config('tenancy.central_domains') as $domain) {
         Route::middleware(['auth'])->prefix('dashboard')->as('dashboard.')->group(function () {
             Route::get('/', [DashboardController::class, 'index'])->name('index');
             Route::get('tenants/impersonate/{tenant}/{user}', [ImpersonateController::class, 'impersonate'])->name('impersonate');
+            Route::post('tenants/tenant-migrate', [DashboardController::class, 'runTenantMigration'])->name('run.tenant.migrate');
+
         });        
         
         Route::get('/teste-gratis', [TrialController::class, 'index'])->name('trial.index');

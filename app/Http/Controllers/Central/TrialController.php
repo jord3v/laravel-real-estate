@@ -11,6 +11,13 @@ use Illuminate\Http\Request;
 class TrialController extends Controller
 {
     /**
+     * Construtor com injeção de dependências.
+     *
+     * @param CentralUser $user
+     */
+    public function __construct(private CentralUser $user, private Tenant $tenant)
+    {}
+    /**
      * Exibe o formulário de teste gratuito.
      *
      * @return \Illuminate\Contracts\View\View
@@ -30,13 +37,13 @@ class TrialController extends Controller
     {
         $token = str()->uuid();
         $subdomain = "client1." . request()->getHost();
-        $user = CentralUser::create([
+        $user = $this->user->create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => $request->password
         ]);
         User::find($user->id)->assignRole('tenant');
-        $tenant = Tenant::create([
+        $tenant = $this->tenant->create([
             'name' => $request->company_name,
             'email' => $request->email,
             'post_signup_login_token' => $token,

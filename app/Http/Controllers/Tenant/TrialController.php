@@ -8,6 +8,13 @@ use Illuminate\Http\Request;
 
 class TrialController extends Controller
 {
+    /**
+     * Construtor com injeção de dependências.
+     *
+     * @param User $user
+     */
+    public function __construct(private User $user)
+    {}
     public function index(string $token)
     {
         $tenant = tenant();
@@ -15,7 +22,7 @@ class TrialController extends Controller
             abort(404);
         }
         
-        $user = User::first();
+        $user = $this->user->first();
         $user->assignRole('admin');
         
         if (!$user) {

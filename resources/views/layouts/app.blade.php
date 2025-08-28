@@ -6,11 +6,91 @@
       <meta http-equiv="X-UA-Compatible" content="ie=edge" />
       <title>Dashboard - Tabler - Premium and Open Source dashboard template with responsive and high quality UI.</title>
       <link href="{{ mix('css/app.css') }}" rel="stylesheet"/>
+      <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.css" rel="stylesheet">
+      <style>
+    /* public/css/attendance_history.css */
+
+.post-it-card {
+    background-color: #ffc; /* Cor amarela suave de post-it */
+    border: 1px solid #e0e0e0;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    margin-bottom: 1rem;
+    padding: 1rem;
+    position: relative;
+    /* Adiciona uma leve rotação para o efeito post-it */
+    transform: rotate(calc(var(--rotation-deg) * 1deg));
+    transition: transform 0.2s ease-in-out;
+    border-radius: 4px; /* Bordas levemente arredondadas */
+    /* Detalhe de sombra para simular a dobra do papel */
+    filter: drop-shadow(0px 5px 3px rgba(0, 0, 0, 0.1));
+}
+
+.post-it-card:hover {
+    transform: rotate(0deg) scale(1.02); /* Animação ao passar o mouse */
+    z-index: 10;
+}
+
+.post-it-card .status-change {
+    font-size: 0.9em;
+    color: #6c757d; /* Cor secundária para o texto */
+}
+
+.post-it-card .status-new {
+    font-weight: bold;
+    color: #212529; /* Cor principal para o status */
+}
+
+.post-it-card .timestamp {
+    font-size: 0.8em;
+    color: #888;
+    margin-top: 0.5rem;
+    display: block;
+}
+
+.post-it-card .notes-change {
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed #ccc; /* Separador para as notas */
+    font-size: 0.85em;
+}
+
+.post-it-card .notes-change small {
+    display: block;
+    color: #6c757d;
+    margin-bottom: 0.2rem;
+}
+
+.post-it-card .notes-change strong {
+    color: #343a40;
+}
+</style>
+      @stack('styles')
       <style>
          @import url("https://rsms.me/inter/inter.css");
       </style>
    </head>
    <body>
+      <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+      @push('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        new TomSelect("#select-status", {
+            create: true,
+            sortField: {
+                field: "text",
+                direction: "asc"
+            },
+            plugins: {
+                remove_button: {
+                    title: 'Remover'
+                }
+            },
+            // Adicione esta linha para o tema
+            theme: 'bootstrap5' 
+        });
+    });
+</script>
+@endpush
       <div class="page">
          <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
             <div class="container-fluid">
@@ -49,70 +129,67 @@
                </div>
                <div class="collapse navbar-collapse" id="sidebar-menu">
                   <ul class="navbar-nav pt-lg-3">
-                     <li class="nav-item">
-                        <a class="nav-link" href="./">
-                           <span class="nav-link-icon d-md-none d-lg-inline-block">
-                              <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-dashboard">
-                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                 <path d="M12 13m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                                 <path d="M13.45 11.55l2.05 -2.05" />
-                                 <path d="M6.4 20a9 9 0 1 1 11.2 0z" />
-                              </svg>
-                           </span>
-                           <span class="nav-link-title"> Home </span>
-                        </a>
-                     </li>
-                     <li class="nav-item dropdown">
-                        <a
-                           class="nav-link dropdown-toggle"
-                           href="#navbar-base"
-                           data-bs-toggle="dropdown"
-                           data-bs-auto-close="false"
-                           role="button"
-                           aria-expanded="false"
-                           >
-                           <span class="nav-link-icon d-md-none d-lg-inline-block">
-                              <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-building-skyscraper">
-                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                 <path d="M3 21l18 0" />
-                                 <path d="M5 21v-14l8 -4v18" />
-                                 <path d="M19 21v-10l-6 -4" />
-                                 <path d="M9 9l0 .01" />
-                                 <path d="M9 12l0 .01" />
-                                 <path d="M9 15l0 .01" />
-                                 <path d="M9 18l0 .01" />
-                              </svg>
-                           </span>
-                           <span class="nav-link-title"> Interface </span>
-                        </a>
-                        <div class="dropdown-menu">
-                           <div class="dropdown-menu-columns">
-                              <div class="dropdown-menu-column">
-                                 <a class="dropdown-item" href="./accordion.html">
-                                 Accordion
-                                 <span class="badge badge-sm bg-green-lt text-uppercase ms-auto">New</span>
-                                 </a>
-                                 <a class="dropdown-item" href="./alerts.html"> Alerts </a>
-                                 <div class="dropend">
-                                    <a
-                                       class="dropdown-item dropdown-toggle"
-                                       href="#sidebar-authentication"
-                                       data-bs-toggle="dropdown"
-                                       data-bs-auto-close="false"
-                                       role="button"
-                                       aria-expanded="false"
-                                       >
-                                    Authentication
-                                    </a>
-                                    <div class="dropdown-menu">
-                                       <a href="" class="dropdown-item"> Sign in </a>
-                                    </div>
-                                 </div>
-                              </div>
-                           </div>
-                        </div>
-                     </li>
-                  </ul>
+    {{-- Home/Dashboard --}}
+    <li class="nav-item @if(request()->routeIs('dashboard')) active @endif">
+        <a class="nav-link" href="{{ route('dashboard') }}">
+            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-dashboard"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 13m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M13.45 11.55l2.05 -2.05" /><path d="M6.4 20a9 9 0 1 1 11.2 0z" /></svg>
+            </span>
+            <span class="nav-link-title"> {{ __('Início') }} </span>
+        </a>
+    </li>
+
+    {{-- Imóveis --}}
+    <li class="nav-item @if(request()->routeIs('properties.*')) active @endif">
+        <a class="nav-link" href="{{ route('properties.index') }}">
+            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-home"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l-2 0l9 -9l9 9l-2 0" /><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" /><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" /></svg>
+            </span>
+            <span class="nav-link-title"> {{ __('Imóveis') }} </span>
+        </a>
+    </li>
+
+    {{-- Contratos --}}
+    <li class="nav-item @if(request()->routeIs('leases.*')) active @endif">
+        <a class="nav-link" href="{{ route('leases.index') }}">
+            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-contract"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 21h-2a3 3 0 0 1 -3 -3v-1h5.5" /><path d="M17 8.5v-3.5a2 2 0 1 1 2 2h-2" /><path d="M19 3h-11a3 3 0 0 0 -3 3v11" /><path d="M9 7h4" /><path d="M9 11h4" /><path d="M18.42 12.61a2.1 2.1 0 0 1 2.97 2.97l-6.39 6.42h-3v-3z" /></svg>
+            </span>
+            <span class="nav-link-title"> {{ __('Contratos') }} </span>
+        </a>
+    </li>
+    
+    {{-- Atendimento (Novo Item) --}}
+    <li class="nav-item @if(request()->routeIs('attendances.*')) active @endif">
+        <a class="nav-link" href="{{ route('attendances.index') }}">
+            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-headset"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 14v-3a8 8 0 1 1 16 0v3" /><path d="M18 19c0 1.657 -2.686 3 -6 3" /><path d="M4 14a2 2 0 0 1 2 -2h1a2 2 0 0 1 2 2v3a2 2 0 0 1 -2 2h-1a2 2 0 0 1 -2 -2v-3z" /><path d="M15 14a2 2 0 0 1 2 -2h1a2 2 0 0 1 2 2v3a2 2 0 0 1 -2 2h-1a2 2 0 0 1 -2 -2v-3z" /></svg>
+            </span>
+            <span class="nav-link-title"> {{ __('Atendimento') }} </span>
+        </a>
+    </li>
+
+    {{-- Menu Dropdown de Pessoas --}}
+    @php
+        $isPeopleActive = request()->routeIs('customers.*') || request()->routeIs('payments.*');
+    @endphp
+    <li class="nav-item dropdown @if($isPeopleActive) active @endif">
+        <a class="nav-link dropdown-toggle" href="#navbar-pessoas" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="{{ $isPeopleActive ? 'true' : 'false' }}">
+            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-users"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" /><path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /><path d="M21 21v-2a4 4 0 0 0 -3 -3.85" /></svg>
+            </span>
+            <span class="nav-link-title">{{ __('Pessoas') }}</span>
+        </a>
+        <div class="dropdown-menu @if($isPeopleActive) show @endif">
+            <a class="dropdown-item @if(request()->routeIs('customers.*')) active @endif" href="{{ route('customers.index') }}">
+                {{ __('Clientes') }}
+            </a>
+            <a class="dropdown-item @if(request()->routeIs('payments.*')) active @endif" href="{{ route('payments.index') }}">
+                {{ __('Pagamentos') }}
+            </a>
+        </div>
+    </li>
+</ul>
                </div>
             </div>
          </aside>
@@ -315,5 +392,6 @@
          </div>
       </div>
       <script src="{{ mix('js/app.js') }}" defer></script>
+      @stack('scripts')
    </body>
 </html>
