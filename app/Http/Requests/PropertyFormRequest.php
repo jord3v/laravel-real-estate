@@ -39,6 +39,7 @@ class PropertyFormRequest extends FormRequest
             // Validação para o campo JSON de endereço
             "address.cep" => "required|string|size:8",
             "address.street" => "required|string|max:255",
+            "address.neighborhood" => "required|string|max:255",
             "address.city" => "required|string|max:255",
             "address.state" => "required|string|max:255",
 

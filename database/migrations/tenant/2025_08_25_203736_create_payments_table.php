@@ -13,10 +13,19 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('lease_id')->constrained()->onDelete('cascade');
+            $table->foreignId('lease_id')->nullable()->constrained()->onDelete('cascade');
+            $table->enum('type', ['income', 'expense', 'fee', 'refund', 'commission'])->default('income');
+            $table->string('category');
+            $table->text('description')->nullable();
             $table->decimal('amount', 10, 2);
+            $table->decimal('paid_amount', 10, 2)->nullable();
             $table->date('payment_date');
-            $table->string('status')->default('paid');
+            $table->date('paid_at')->nullable();
+            $table->date('reference_date');
+            $table->enum('status', ['paid', 'pending', 'overdue', 'partially_overdue', 'canceled', 'dispute', 'recurrent'])->default('pending');
+            $table->enum('payment_method', ['pix', 'boleto', 'cartao_credito', 'cartao_debito', 'transferencia', 'dinheiro'])->nullable();
+            $table->string('transaction_code')->nullable();
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }

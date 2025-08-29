@@ -5,7 +5,7 @@
     <div class="container-xl">
         <div class="row g-2 align-items-center">
             <div class="col">
-                <h2 class="page-title">{{ __('Editar Pessoa') }}</h2>
+                <h2 class="page-title">{{ __('Editar Cliente') }}</h2>
             </div>
         </div>
     </div>
@@ -14,11 +14,11 @@
 <div class="page-body">
     <div class="container-xl">
         <div class="card">
-            <div class="card-body">
-                <form action="{{ route('customers.update', $customer) }}" method="POST">
-                    @include('tenant.dashboard.customers._form')
-                </form>
-            </div>
+            <form action="{{ route('customers.update', $customer) }}" method="POST">
+                @csrf
+                @method('PUT')
+                @include('tenant.dashboard.customers._form')
+            </form>
         </div>
     </div>
 </div>

@@ -9,24 +9,16 @@ use Illuminate\Http\Request;
 class CustomerController extends Controller
 {
     /**
-     * Construtor com injeção de dependências.
-     *
-     * @param Customer $customer
-     */
-    public function __construct(private Customer $customer)
-    {}
-    /**
-     * Exibe a lista de pessoas.
+     * Exibe a lista de clientes.
      */
     public function index()
     {
-        $customers = $this->customer->all();
-        
+        $customers = Customer::latest()->paginate(15);
         return view('tenant.dashboard.customers.index', compact('customers'));
     }
 
     /**
-     * Exibe o formulário para criar uma nova pessoa.
+     * Exibe o formulário para criar um novo cliente.
      */
     public function create()
     {
@@ -34,33 +26,40 @@ class CustomerController extends Controller
     }
 
     /**
-     * Salva uma nova pessoa no banco de dados.
+     * Salva um novo cliente no banco de dados.
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:customers,email',
-            'phone' => 'nullable|string|max:20',
-            'type' => 'required|in:owner,renter,agent', // Valida o tipo
+            'type' => 'required|string|in:lessor,lessee,guarantor,prospect,agent,supplier,administrator',
+            'email' => 'nullable|email|unique:customers,email',
+            'phone' => 'nullable|string',
+            'document_type' => 'required|string|in:pf,pj',
+            
+            // Campos condicionais para Pessoa Física (pf)
+            'cpf' => 'required_if:document_type,pf|nullable|string|unique:customers,cpf',
+            'rg' => 'required_if:document_type,pf|nullable|string',
+            'marital_status' => 'required_if:document_type,pf|nullable|string',
+            'nationality' => 'required_if:document_type,pf|nullable|string',
+            'profession' => 'required_if:document_type,pf|nullable|string',
+            'spouse_name' => 'nullable|string',
+            'spouse_rg' => 'nullable|string',
+            'spouse_cpf' => 'nullable|string',
+            'spouse_profession' => 'nullable|string',
+
+            // Campos condicionais para Pessoa Jurídica (pj)
+            'company_name' => 'required_if:document_type,pj|nullable|string|max:255',
+            'cnpj' => 'required_if:document_type,pj|nullable|string|unique:customers,cnpj',
         ]);
+        
+        Customer::create($validated);
 
-        $this->customer->create($validated);
-
-        return redirect()->route('customers.index')
-                         ->with('status', 'Pessoa cadastrada com sucesso!');
-    }
-    
-    /**
-     * Exibe os detalhes de uma pessoa (redireciona para o formulário de edição).
-     */
-    public function show(Customer $customer)
-    {
-        return redirect()->route('customers.edit', $customer);
+        return redirect()->route('customers.index')->with('success', 'Cliente cadastrado com sucesso!');
     }
 
     /**
-     * Exibe o formulário para editar uma pessoa.
+     * Exibe o formulário para editar um cliente.
      */
     public function edit(Customer $customer)
     {
@@ -68,31 +67,45 @@ class CustomerController extends Controller
     }
 
     /**
-     * Atualiza uma pessoa no banco de dados.
+     * Atualiza um cliente no banco de dados.
      */
     public function update(Request $request, Customer $customer)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:customers,email,'.$customer->id, // Ignora o próprio ID
-            'phone' => 'nullable|string|max:20',
-            'type' => 'required|in:owner,renter,agent',
-        ]);
+            'type' => 'required|string|in:lessor,lessee,guarantor,prospect,agent,supplier,administrator',
+            'email' => 'nullable|email|unique:customers,email,' . $customer->id,
+            'phone' => 'nullable|string',
+            'document_type' => 'required|string|in:pf,pj',
 
+            // Campos condicionais para Pessoa Física (pf)
+            'cpf' => 'required_if:document_type,pf|nullable|string|unique:customers,cpf,' . $customer->id,
+            'rg' => 'required_if:document_type,pf|nullable|string',
+            'marital_status' => 'required_if:document_type,pf|nullable|string',
+            'nationality' => 'required_if:document_type,pf|nullable|string',
+            'profession' => 'required_if:document_type,pf|nullable|string',
+            'spouse_name' => 'nullable|string',
+            'spouse_rg' => 'nullable|string',
+            'spouse_cpf' => 'nullable|string',
+            'spouse_profession' => 'nullable|string',
+
+            // Campos condicionais para Pessoa Jurídica (pj)
+            'company_name' => 'required_if:document_type,pj|nullable|string|max:255',
+            'cnpj' => 'required_if:document_type,pj|nullable|string|unique:customers,cnpj,' . $customer->id,
+        ]);
+        
         $customer->update($validated);
 
-        return redirect()->route('customers.index')
-                         ->with('status', 'Pessoa atualizada com sucesso!');
+        return redirect()->route('customers.index')->with('success', 'Cliente atualizado com sucesso!');
     }
 
     /**
-     * Remove uma pessoa do banco de dados.
+     * Exclui um cliente do banco de dados.
      */
     public function destroy(Customer $customer)
     {
         $customer->delete();
 
-        return redirect()->route('customers.index')
-                         ->with('status', 'Pessoa excluída com sucesso!');
+        return redirect()->route('customers.index')->with('success', 'Cliente excluído com sucesso!');
     }
 }

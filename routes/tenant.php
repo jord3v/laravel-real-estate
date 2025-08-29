@@ -39,6 +39,7 @@ Route::middleware([
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
         Route::prefix('properties')->name('properties.')->group(function () {
             Route::resource('/', PropertyController::class)->names('')->parameters(['' => 'property']);
+            Route::post('/generate-ai-description', [PropertyController::class, 'generateDescriptionWithAi'])->name('generateDescriptionWithAi');
             Route::post('{property}/clone', [PropertyController::class, 'clone'])->name('clone');
             Route::post('{property}/media', [PropertyController::class, 'mediaUpload'])->name('media.upload');
             Route::delete('{property}/media/{media}', [PropertyController::class, 'mediaDelete'])->name('media.delete');
@@ -49,7 +50,12 @@ Route::middleware([
 
         // Agrupando os outros recursos em uma única linha para clareza
         Route::resource('attendances', AttendanceController::class)->names('attendances');
+
         Route::resource('leases', LeaseController::class)->names('leases');
+        Route::get('leases/{lease}/payments/preview', [App\Http\Controllers\Tenant\LeaseController::class, 'previewPayments'])->name('leases.payments.preview');
+        Route::post('leases/{lease}/payments/store-generated', [App\Http\Controllers\Tenant\LeaseController::class, 'storeGeneratedPayments'])->name('leases.payments.store_generated');
+        Route::post('leases/{lease}/payments/{payment}/receive', [App\Http\Controllers\Tenant\PaymentController::class, 'receive'])->name('leases.payments.receive');
+        
         Route::resource('customers', CustomerController::class)->names('customers');
         Route::resource('payments', PaymentController::class)->names('payments');
     });

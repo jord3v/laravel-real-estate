@@ -91,11 +91,15 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-8 mb-3">
+                            <div class="col-md-5 mb-3">
+                                <label class="form-label">{{ __('Bairro') }}</label>
+                                <input type="text" name="address[neighborhood]" id="neighborhood" class="form-control @error('address.neighborhood') is-invalid @enderror" value="{{ old('address.neighborhood', $property->address['neighborhood'] ?? '') }}" required>
+                            </div>
+                            <div class="col-md-5 mb-3">
                                 <label class="form-label">{{ __('Cidade') }}</label>
                                 <input type="text" name="address[city]" id="city" class="form-control @error('address.city') is-invalid @enderror" value="{{ old('address.city', $property->address['city'] ?? '') }}" required>
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-2 mb-3">
                                 <label class="form-label">{{ __('Estado') }}</label>
                                 <input type="text" name="address[state]" id="state" class="form-control @error('address.state') is-invalid @enderror" value="{{ old('address.state', $property->address['state'] ?? '') }}" required>
                             </div>
@@ -247,13 +251,20 @@
                         <h3 class="card-title">{{ __('Descrição do Imóvel') }}</h3>
                         <div class="mb-3">
                             <label class="form-label">{{ __('Descrição Completa do Imóvel') }}</label>
-                            <textarea name="description" class="form-control @error('description') is-invalid @enderror" rows="5">{{ old('description', $property->description ?? '') }}</textarea>
+                            <textarea name="description" id="description-textarea" class="form-control @error('description') is-invalid @enderror" rows="5">{{ old('description', $property->description ?? '') }}</textarea>
+                            @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="mb-3">
-                            <button type="button" class="btn btn-primary">
-                                <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-brand-openai"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M11.217 19.384a3.501 3.501 0 0 0 6.783 -1.217v-5.167l-6 -3.35" /><path d="M5.214 15.014a3.501 3.501 0 0 0 4.446 5.266l4.34 -2.534v-6.946" /><path d="M6 7.63c-1.391 -.236 -2.787 .395 -3.534 1.689a3.474 3.474 0 0 0 1.271 4.745l4.263 2.514l6 -3.348" /><path d="M12.783 4.616a3.501 3.501 0 0 0 -6.783 1.217v5.067l6 3.45" /><path d="M18.786 8.986a3.501 3.501 0 0 0 -4.446 -5.266l-4.34 2.534v6.946" /><path d="M18 16.302c1.391 .236 2.787 -.395 3.534 -1.689a3.474 3.474 0 0 0 -1.271 -4.745l-4.308 -2.514l-5.955 3.42" /></svg>
-                                {{ __('Gerar com IA') }}
-                            </button>
+                            <a class="btn btn-primary" id="generate-ai-description-btn">
+                                <span id="ai-btn-text">
+                                    <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-brand-openai"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M11.217 19.384a3.501 3.501 0 0 0 6.783 -1.217v-5.167l-6 -3.35" /><path d="M5.214 15.014a3.501 3.501 0 0 0 4.446 5.266l4.34 -2.534v-6.946" /><path d="M6 7.63c-1.391 -.236 -2.787 .395 -3.534 1.689a3.474 3.474 0 0 0 1.271 4.745l4.263 2.514l6 -3.348" /><path d="M12.783 4.616a3.501 3.501 0 0 0 -6.783 1.217v5.067l6 3.45" /><path d="M18.786 8.986a3.501 3.501 0 0 0 -4.446 -5.266l-4.34 2.534v6.946" /><path d="M18 16.302c1.391 .236 2.787 -.395 3.534 -1.689a3.474 3.474 0 0 0 -1.271 -4.745l-4.308 -2.514l-5.955 3.42" /></svg>
+                                    {{ __('Gerar descrição com inteligência artificial') }}
+                                </span>
+                                <span id="ai-loading-spinner" class="d-none">
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    {{ __('Gerando...') }}
+                                </span>
+                            </a>
                         </div>
                     </div>
 
@@ -536,6 +547,55 @@
 </script>
 @push('scripts')
 <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('property-form');
+        const generateAiButton = document.getElementById('generate-ai-description-btn');
+        const aiBtnText = document.getElementById('ai-btn-text');
+        const aiLoadingSpinner = document.getElementById('ai-loading-spinner');
+        const descriptionTextarea = document.getElementById('description-textarea');
+
+        if (generateAiButton && form && descriptionTextarea) {
+            generateAiButton.addEventListener('click', async function () {
+                aiBtnText.classList.add('d-none');
+                aiLoadingSpinner.classList.remove('d-none');
+
+                try {
+                    const formData = new FormData(form);
+                    formData.delete('_method');
+                    formData.delete('campo2');
+                    
+                    const response = await fetch('{{ route("properties.generateDescriptionWithAi") }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || "{{ csrf_token() }}",
+                            'Accept': 'application/json',
+                        },
+                        body: formData,
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Erro na requisição: ' + response.statusText);
+                    }
+
+                    const data = await response.json();
+                    if (data.description) {
+                        descriptionTextarea.value = data.description;
+                    } else {
+                        alert('Nenhuma descrição gerada pela IA.');
+                    }
+                } catch (error) {
+                    console.error('Erro ao gerar descrição:', error);
+                    alert('Ocorreu um erro ao gerar a descrição. Tente novamente.');
+                } finally {
+                    aiBtnText.classList.remove('d-none');
+                    aiLoadingSpinner.classList.add('d-none');
+                }
+            });
+        }
+    });
+</script>
+<script>
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('property-form');
         const formNav = document.getElementById('form-nav');
@@ -601,6 +661,7 @@
     
         const cepInput = document.getElementById('cep');
         const addressInput = document.getElementById('address');
+        const neighborhoodInput = document.getElementById('neighborhood');
         const cityInput = document.getElementById('city');
         const stateInput = document.getElementById('state');
 
@@ -609,6 +670,7 @@
                 const cep = cepInput.value.replace(/\D/g, '');
                 if (cep.length === 8) {
                     addressInput.value = '...';
+                    neighborhoodInput.value = '...';
                     cityInput.value = '...';
                     stateInput.value = '...';
                     
@@ -617,11 +679,13 @@
                         .then(data => {
                             if (!data.erro) {
                                 addressInput.value = data.logradouro;
+                                neighborhoodInput.value = data.bairro;
                                 cityInput.value = data.localidade;
                                 stateInput.value = data.uf;
                             } else {
                                 alert('CEP não encontrado.');
                                 addressInput.value = '';
+                                neighborhoodInput.value = '';
                                 cityInput.value = '';
                                 stateInput.value = '';
                             }
@@ -629,6 +693,7 @@
                         .catch(() => {
                             alert('Erro ao buscar o CEP.');
                             addressInput.value = '';
+                            neighborhoodInput.value = '';
                             cityInput.value = '';
                             stateInput.value = '';
                         });

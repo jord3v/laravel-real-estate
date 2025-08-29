@@ -5,7 +5,7 @@
     <div class="container-xl">
         <div class="row g-2 align-items-center">
             <div class="col">
-                <h2 class="page-title">{{ __('Novo Cliente') }}</h2>
+                <h2 class="page-title">{{ __('Editar Contrato') }}</h2>
             </div>
         </div>
     </div>
@@ -14,9 +14,10 @@
 <div class="page-body">
     <div class="container-xl">
         <div class="card">
-            <form action="{{ route('customers.store') }}" method="POST">
+            <form action="{{ route('leases.update', $lease) }}" method="POST">
                 @csrf
-                @include('tenant.dashboard.customers._form')
+                @method('PUT')
+                @include('tenant.dashboard.leases._form', ['lease' => $lease])
             </form>
         </div>
     </div>

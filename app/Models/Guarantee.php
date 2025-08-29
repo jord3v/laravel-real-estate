@@ -5,42 +5,33 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Payment extends Model
+class Guarantee extends Model
 {
     use HasFactory;
 
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<string>
+     * @var array<int, string>
      */
     protected $fillable = [
-        'lease_id',
+        'lease_id', // Add this line
         'type',
-        'category',
-        'description',
-        'amount',
-        'paid_amount',
-        'payment_date',
-        'paid_at',
-        'reference_date',
-        'status',
-        'payment_method',
-        'transaction_code',
-        'notes',
+        'details',
     ];
 
     /**
      * The attributes that should be cast to native types.
      *
-     * @var array
+     * @var array<string, string>
      */
     protected $casts = [
-        'payment_date' => 'date',
-        'paid_at' => 'date',
-        'reference_date' => 'date',
+        'details' => 'array',
     ];
 
+    /**
+     * Get the lease that owns the guarantee.
+     */
     public function lease()
     {
         return $this->belongsTo(Lease::class);

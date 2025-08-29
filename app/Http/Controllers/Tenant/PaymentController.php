@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\Lease;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use DB;
+use Exception;
 
 class PaymentController extends Controller
 {
@@ -92,5 +95,43 @@ class PaymentController extends Controller
 
         return redirect()->route('payments.index')
                          ->with('status', 'Pagamento excluído com sucesso!');
+    }
+
+    /**
+     * Atualiza um pagamento no banco de dados.
+     */
+    public function receive(Request $request, Lease $lease, Payment $payment)
+    {
+        try {
+            $validated = $request->validate([
+                'paid_at' => 'required|date',
+                'paid_amount' => 'required|numeric|min:0',
+                'payment_method' => 'required|string',
+                'transaction_code' => 'nullable|string',
+                'notes' => 'nullable|string',
+            ]);
+            
+            DB::transaction(function () use ($validated, $payment) {
+                // A validação agora checa o valor do boleto vs. o valor pago.
+                // Se o valor pago for menor, o status é 'partially_overdue'.
+                $status = ($validated['paid_amount'] < $payment->amount) ? 'partially_overdue' : 'paid';
+
+                $payment->update([
+                    'paid_at' => $validated['paid_at'],
+                    'paid_amount' => $validated['paid_amount'],
+                    'payment_method' => $validated['payment_method'],
+                    'transaction_code' => $validated['transaction_code'],
+                    'notes' => $validated['notes'],
+                    'status' => $status,
+                ]);
+            });
+
+            return back()->with('success', 'Pagamento recebido com sucesso!');
+
+        } catch (ValidationException $e) {
+            return back()->withInput()->withErrors($e->errors());
+        } catch (Exception $e) {
+            return back()->withInput()->withErrors(['error' => 'Ocorreu um erro ao receber o pagamento: ' . $e->getMessage()]);
+        }
     }
 }

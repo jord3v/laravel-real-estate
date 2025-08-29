@@ -9,7 +9,7 @@
         <option value="">{{ __('Selecione um contrato') }}</option>
         @foreach ($leases as $lease)
             <option value="{{ $lease->id }}" {{ old('lease_id', $payment->lease_id ?? '') == $lease->id ? 'selected' : '' }}>
-                {{ $lease->property->address }} ({{ $lease->renter->name }})
+                {{ $lease->property->address['street'] }} ({{ $lease->renter->name }})
             </option>
         @endforeach
     </select>
