@@ -14,9 +14,8 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(): \Illuminate\View\View
     {
-        // Contagem de atendimentos para o funil
         $funnelData = Attendance::query()
             ->selectRaw('status, count(*) as count')
             ->groupBy('status')
@@ -24,31 +23,27 @@ class DashboardController extends Controller
             ->toArray();
         $totalAttendances = array_sum($funnelData);
 
-        // Contagem de imóveis, contratos e clientes
         $totalProperties = Property::count();
         $totalLeases = Lease::count();
         $totalCustomers = Customer::count();
         $activeLeases = Lease::where('status', 'active')->count();
 
-        // Dados para os cards de resumo financeiro
         $totalIncome = Payment::where('type', 'income')->where('status', 'paid')->sum('paid_amount');
         $totalExpense = Payment::where('type', 'expense')->where('status', 'paid')->sum('paid_amount');
         $balance = $totalIncome - $totalExpense;
 
         $unpaidPayments = Payment::whereIn('status', ['pending', 'overdue']);
-        $totalReceivable = $unpaidPayments->where('type', 'income')->sum('amount');
-        $totalPayable = $unpaidPayments->where('type', 'expense')->sum('amount');
+        $totalReceivable = (clone $unpaidPayments)->where('type', 'income')->sum('amount');
+        $totalPayable = (clone $unpaidPayments)->where('type', 'expense')->sum('amount');
 
         $overdueCount = Payment::where('status', 'overdue')->count();
         $totalPendingCount = Payment::whereIn('status', ['pending', 'overdue'])->count();
         $defaultRate = ($totalPendingCount > 0) ? ($overdueCount / $totalPendingCount) * 100 : 0;
 
-        // Dados para as novas métricas da aba principal
         $totalLeads = Attendance::where('status', 'Novo Contato')->count();
         $totalPayments = Payment::count();
         $totalPaidPayments = Payment::where('status', 'paid')->count();
 
-        // Dados para o gráfico de fluxo de caixa (últimos 6 meses)
         $monthlyPayments = Payment::query()
             ->select(
                 DB::raw('DATE_FORMAT(paid_at, "%Y-%m") as month'),
@@ -61,19 +56,15 @@ class DashboardController extends Controller
             ->groupBy('month', 'type')
             ->orderBy('month')
             ->get();
-        
+
         $incomeData = $monthlyPayments->where('type', 'income')->pluck('total', 'month');
         $expenseData = $monthlyPayments->where('type', 'expense')->pluck('total', 'month');
         $allMonths = $monthlyPayments->pluck('month')->unique()->sort();
 
-        $cashFlowLabels = $allMonths->map(function($month) {
-            return Carbon::createFromFormat('Y-m', $month)->translatedFormat('M/y');
-        });
-        
+        $cashFlowLabels = $allMonths->map(fn($month) => \Carbon\Carbon::createFromFormat('Y-m', $month)->translatedFormat('M/y'));
         $incomeValues = $allMonths->map(fn($month) => $incomeData[$month] ?? 0);
         $expenseValues = $allMonths->map(fn($month) => $expenseData[$month] ?? 0);
 
-        // Dados para o gráfico de pizza (top 5 despesas)
         $expenseCategories = Payment::query()
             ->select('category', DB::raw('SUM(paid_amount) as total'))
             ->where('type', 'expense')

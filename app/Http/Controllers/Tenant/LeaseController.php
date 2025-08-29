@@ -16,15 +16,15 @@ use Exception;
 
 class LeaseController extends Controller
 {
-    public function index()
+    public function index(): \Illuminate\View\View
     {
         $leases = Lease::with(['lessor', 'lessee', 'property', 'payments'])
-                       ->latest()
-                       ->paginate(15);
+            ->latest()
+            ->paginate(15);
         return view('tenant.dashboard.leases.index', compact('leases'));
     }
 
-    public function create()
+    public function create(): \Illuminate\View\View
     {
         $lessors = Customer::where('type', 'lessor')->get();
         $lessees = Customer::where('type', 'lessee')->get();
@@ -33,7 +33,7 @@ class LeaseController extends Controller
         return view('tenant.dashboard.leases.create', compact('lessors', 'lessees', 'guarantors', 'properties'));
     }
 
-    public function store(Request $request)
+    public function store(\Illuminate\Http\Request $request): \Illuminate\Http\RedirectResponse
     {
         try {
             $validated = $request->validate([
@@ -62,22 +62,18 @@ class LeaseController extends Controller
                 'elected_forum' => 'required|string',
                 'via_count' => 'required|integer|min:1',
             ]);
-            
             $validated['benfeitorias'] = $request->has('benfeitorias');
             $validated['monetary_correction'] = $request->has('monetary_correction');
-            $validated['end_date'] = Carbon::parse($validated['start_date'])->addMonths((int)$validated['term_months']);
+            $validated['end_date'] = \Carbon\Carbon::parse($validated['start_date'])->addMonths((int)$validated['term_months']);
 
             DB::transaction(function () use ($validated) {
                 $lease = Lease::create($validated);
-                
-                Guarantee::create([
+                \App\Models\Guarantee::create([
                     'lease_id' => $lease->id,
                     'type' => $validated['guarantee_type'],
                 ]);
             });
-
             return redirect()->route('leases.index')->with('success', 'Contrato cadastrado com sucesso!');
-
         } catch (ValidationException $e) {
             return back()->withInput()->withErrors($e->errors());
         } catch (\Exception $e) {

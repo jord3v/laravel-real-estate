@@ -10,72 +10,49 @@ use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
 {
-    /**
-     * Construtor com injeção de dependências.
-     *
-     * @param Attendance $attendance
-     * @param Property $property
-     * @param Customer $customer
-     */
-    public function __construct(private Attendance $attendance, private Property $property, private Customer $customer)
-    {}
-    /**
-     * Exibe a lista de atendimentos.
-     */
-    public function index()
+    public function __construct(
+        private Attendance $attendance,
+        private Property $property,
+        private Customer $customer
+    ) {}
+
+    public function index(): \Illuminate\View\View
     {
         $attendances = $this->attendance->with(['property', 'customer'])
-                                 ->withCount('history')
-                                 ->latest()
-                                 ->paginate(10);
-
+            ->withCount('history')
+            ->latest()
+            ->paginate(10);
         return view('tenant.dashboard.attendances.index', compact('attendances'));
     }
 
-    /**
-     * Exibe o formulário para criar um novo atendimento.
-     */
-    public function create()
+    public function create(): \Illuminate\View\View
     {
         $properties = $this->property->all();
         $customers = $this->customer->all();
-        $statuses = $this->attendance->distinct()->pluck('status'); // Pega os status únicos
-        
+        $statuses = $this->attendance->distinct()->pluck('status');
         return view('tenant.dashboard.attendances.create', compact('properties', 'customers', 'statuses'));
     }
 
-    /**
-     * Salva um novo atendimento no banco de dados.
-     */
-    public function store(Request $request)
+    public function store(\Illuminate\Http\Request $request): \Illuminate\Http\RedirectResponse
     {
         $validated = $request->validate([
             'property_id' => 'nullable|exists:properties,id',
             'customer_id' => 'required|exists:customers,id',
-            'status' => 'required|string|max:255', // Validação agora é apenas 'string'
+            'status' => 'required|string|max:255',
             'notes' => 'nullable|string',
             'attended_at' => 'nullable|date',
         ]);
-
         $attendance = $this->attendance->create($validated);
-        
         $attendance->history()->create(['new_status' => $validated['status']]);
-
         return redirect()->route('attendances.index')->with('success', 'Atendimento cadastrado com sucesso!');
     }
 
-    /**
-     * Exibe os detalhes de um atendimento específico.
-     */
-    public function show(Attendance $attendance)
+    public function show(Attendance $attendance): \Illuminate\View\View
     {
         return view('tenant.dashboard.attendances.show', compact('attendance'));
     }
 
-    /**
-     * Exibe o formulário para editar um atendimento.
-     */
-    public function edit(Attendance $attendance)
+    public function edit(Attendance $attendance): \Illuminate\View\View
     {
         $properties = $this->property->all();
         $customers = $this->customer->all();

@@ -12,39 +12,24 @@ use Exception;
 
 class PaymentController extends Controller
 {
-    /**
-     * Construtor com injeção de dependências.
-     *
-     * @param Payment $payment
-     * @param Lease $lease
-     */
-    public function __construct(private Payment $payment, private Lease $lease)
-    {}
-    /**
-     * Exibe a lista de pagamentos.
-     */
-    public function index()
+    public function __construct(
+        private Payment $payment,
+        private Lease $lease
+    ) {}
+
+    public function index(): \Illuminate\View\View
     {
         $payments = $this->payment->with('lease.renter', 'lease.property')->latest()->get();
-        
         return view('tenant.dashboard.payments.index', compact('payments'));
     }
 
-    /**
-     * Exibe o formulário para criar um novo pagamento.
-     */
-    public function create()
+    public function create(): \Illuminate\View\View
     {
-        // Obtém todos os contratos ativos para o dropdown
         $leases = $this->lease->where('status', 'active')->get();
-
         return view('tenant.dashboard.payments.create', compact('leases'));
     }
 
-    /**
-     * Salva um novo pagamento no banco de dados.
-     */
-    public function store(Request $request)
+    public function store(\Illuminate\Http\Request $request): \Illuminate\Http\RedirectResponse
     {
         $validated = $request->validate([
             'lease_id' => 'required|exists:leases,id',
@@ -52,26 +37,17 @@ class PaymentController extends Controller
             'payment_date' => 'required|date',
             'status' => 'required|in:paid,overdue,pending',
         ]);
-        
         $this->payment->create($validated);
-
-        return redirect()->route('payments.index')
-                         ->with('status', 'Pagamento registrado com sucesso!');
+        return redirect()->route('payments.index')->with('status', 'Pagamento registrado com sucesso!');
     }
-    
-    /**
-     * Exibe o formulário para editar um pagamento.
-     */
-    public function edit(Payment $payment)
+
+    public function edit(Payment $payment): \Illuminate\View\View
     {
         $leases = $this->lease->where('status', 'active')->get();
         return view('tenant.dashboard.payments.edit', compact('payment', 'leases'));
     }
 
-    /**
-     * Atualiza um pagamento no banco de dados.
-     */
-    public function update(Request $request, Payment $payment)
+    public function update(\Illuminate\Http\Request $request, Payment $payment): \Illuminate\Http\RedirectResponse
     {
         $validated = $request->validate([
             'lease_id' => 'required|exists:leases,id',

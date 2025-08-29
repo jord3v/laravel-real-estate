@@ -8,27 +8,18 @@ use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
-    /**
-     * Exibe a lista de clientes.
-     */
-    public function index()
+    public function index(): \Illuminate\View\View
     {
         $customers = Customer::latest()->paginate(15);
         return view('tenant.dashboard.customers.index', compact('customers'));
     }
 
-    /**
-     * Exibe o formulário para criar um novo cliente.
-     */
-    public function create()
+    public function create(): \Illuminate\View\View
     {
         return view('tenant.dashboard.customers.create');
     }
 
-    /**
-     * Salva um novo cliente no banco de dados.
-     */
-    public function store(Request $request)
+    public function store(\Illuminate\Http\Request $request): \Illuminate\Http\RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -36,8 +27,6 @@ class CustomerController extends Controller
             'email' => 'nullable|email|unique:customers,email',
             'phone' => 'nullable|string',
             'document_type' => 'required|string|in:pf,pj',
-            
-            // Campos condicionais para Pessoa Física (pf)
             'cpf' => 'required_if:document_type,pf|nullable|string|unique:customers,cpf',
             'rg' => 'required_if:document_type,pf|nullable|string',
             'marital_status' => 'required_if:document_type,pf|nullable|string',
@@ -47,29 +36,19 @@ class CustomerController extends Controller
             'spouse_rg' => 'nullable|string',
             'spouse_cpf' => 'nullable|string',
             'spouse_profession' => 'nullable|string',
-
-            // Campos condicionais para Pessoa Jurídica (pj)
             'company_name' => 'required_if:document_type,pj|nullable|string|max:255',
             'cnpj' => 'required_if:document_type,pj|nullable|string|unique:customers,cnpj',
         ]);
-        
         Customer::create($validated);
-
         return redirect()->route('customers.index')->with('success', 'Cliente cadastrado com sucesso!');
     }
 
-    /**
-     * Exibe o formulário para editar um cliente.
-     */
-    public function edit(Customer $customer)
+    public function edit(Customer $customer): \Illuminate\View\View
     {
         return view('tenant.dashboard.customers.edit', compact('customer'));
     }
 
-    /**
-     * Atualiza um cliente no banco de dados.
-     */
-    public function update(Request $request, Customer $customer)
+    public function update(\Illuminate\Http\Request $request, Customer $customer): \Illuminate\Http\RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
