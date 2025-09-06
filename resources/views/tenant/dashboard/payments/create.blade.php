@@ -15,7 +15,7 @@
     <div class="container-xl">
         <div class="card">
             <div class="card-body">
-                <form action="{{ route('payments.store') }}" method="POST">
+                <form action="{{ route('payments.store') }}" method="POST" class="needs-validation" novalidate>
                     @include('tenant.dashboard.payments._form')
                 </form>
             </div>

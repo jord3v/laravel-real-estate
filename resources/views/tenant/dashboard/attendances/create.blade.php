@@ -15,7 +15,7 @@
     <div class="container-xl">
         <div class="card">
             <div class="card-body">
-                <form action="{{ route('attendances.store') }}" method="POST">
+                <form action="{{ route('attendances.store') }}" method="POST" class="needs-validation" novalidate>
                     @csrf
                     @include('tenant.dashboard.attendances._form')
                 </form>

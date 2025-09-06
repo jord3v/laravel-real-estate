@@ -18,7 +18,7 @@
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-body">
-                        <form action="{{ route('attendances.update', $attendance) }}" method="POST">
+                        <form action="{{ route('attendances.update', $attendance) }}" method="POST" class="needs-validation" novalidate>
                             @csrf
                             @method('PUT')
                             @include('tenant.dashboard.attendances._form', ['attendance' => $attendance])

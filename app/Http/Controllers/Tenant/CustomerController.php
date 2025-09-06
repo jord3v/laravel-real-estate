@@ -23,7 +23,7 @@ class CustomerController extends Controller
     public function store(CustomerStoreRequest $request): \Illuminate\Http\RedirectResponse
     {
     Customer::create($request->validated());
-    return redirect()->route('customers.index')->with('success', 'Cliente cadastrado com sucesso!');
+    return redirect()->route('customers.index')->with('success', 'Lead cadastrado com sucesso!');
     }
 
     public function edit(Customer $customer): \Illuminate\View\View
@@ -34,16 +34,16 @@ class CustomerController extends Controller
     public function update(CustomerUpdateRequest $request, Customer $customer): \Illuminate\Http\RedirectResponse
     {
     $customer->update($request->validated());
-    return redirect()->route('customers.index')->with('success', 'Cliente atualizado com sucesso!');
+    return redirect()->route('customers.index')->with('success', 'Lead atualizado com sucesso!');
     }
 
     /**
-     * Exclui um cliente do banco de dados.
+     * Exclui um Lead do banco de dados.
      */
     public function destroy(Customer $customer)
     {
         $customer->delete();
 
-        return redirect()->route('customers.index')->with('success', 'Cliente excluído com sucesso!');
+        return redirect()->route('customers.index')->with('success', 'Lead excluído com sucesso!');
     }
 }

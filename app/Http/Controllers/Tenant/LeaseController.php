@@ -59,7 +59,7 @@ class LeaseController extends Controller
         return view('tenant.dashboard.leases.create', compact('lessors', 'lessees', 'guarantors', 'properties'));
     }
     /**
-     * Lista todos os contratos de locação.
+     * Lista todos os Contratos.
      */
     public function index()
     {
@@ -69,56 +69,22 @@ class LeaseController extends Controller
         return view('tenant.dashboard.leases.index', compact('leases'));
     }
 
-    public function update(Request $request, Lease $lease)
+    public function update(LeaseUpdateRequest $request, Lease $lease)
     {
-        try {
-            $validated = $request->validate([
-                'lessor_id' => 'required|exists:customers,id',
-                'lessee_id' => 'required|exists:customers,id',
-                'property_id' => 'required|exists:properties,id',
-                'contract_type' => 'nullable|string',
-                'term_months' => 'required|integer|min:1',
-                'start_date' => 'required|date',
-                'rent_amount' => 'required|numeric|min:0',
-                'due_day' => 'required|integer|min:1|max:31',
-                'payment_place' => 'nullable|string',
-                'readjustment_index' => 'required|string',
-                'alternative_indexes' => 'nullable|array',
-                'late_payment_fine_percent' => 'nullable|numeric|min:0',
-                'late_payment_fine_limit' => 'nullable|numeric|min:0',
-                'late_payment_interest' => 'nullable|numeric|min:0',
-                'monetary_correction' => 'nullable|boolean',
-                'additional_charges' => 'nullable|array',
-                'use_destination' => 'required|string',
-                'maintenance_obligations' => 'required|string',
-                'benfeitorias' => 'nullable|boolean',
-                'guarantee_type' => 'required|string|in:fianca,caucao_dinheiro,seguro_fianca,caucao_imobiliaria',
-                'guarantor_id' => 'required_if:guarantee_type,fianca|nullable|exists:customers,id',
-                'attorney_fees_percent' => 'required|numeric|min:0',
-                'elected_forum' => 'required|string',
-                'via_count' => 'required|integer|min:1',
+        $validated = $request->validated();
+        $validated['benfeitorias'] = $request->has('benfeitorias');
+        $validated['monetary_correction'] = $request->has('monetary_correction');
+        $validated['end_date'] = Carbon::parse($validated['start_date'])->addMonths((int)$validated['term_months']);
+
+        DB::transaction(function () use ($validated, $lease) {
+            $lease->update($validated);
+            $guarantee = $lease->guarantees()->firstOrNew();
+            $guarantee->update([
+                'type' => $validated['guarantee_type'],
             ]);
-            
-            $validated['benfeitorias'] = $request->has('benfeitorias');
-            $validated['monetary_correction'] = $request->has('monetary_correction');
-            $validated['end_date'] = Carbon::parse($validated['start_date'])->addMonths((int)$validated['term_months']);
+        });
 
-            DB::transaction(function () use ($validated, $lease) {
-                $lease->update($validated);
-                
-                $guarantee = $lease->guarantees()->firstOrNew();
-                $guarantee->update([
-                    'type' => $validated['guarantee_type'],
-                ]);
-            });
-
-            return redirect()->route('leases.index')->with('success', 'Contrato atualizado com sucesso!');
-
-        } catch (ValidationException $e) {
-            return back()->withInput()->withErrors($e->errors());
-        } catch (\Exception $e) {
-            return back()->withInput()->withErrors(['error' => 'Ocorreu um erro ao atualizar o contrato: ' . $e->getMessage()]);
-        }
+        return redirect()->route('leases.index')->with('success', 'Contrato atualizado com sucesso!');
     }
 
     public function show(Lease $lease)

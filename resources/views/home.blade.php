@@ -1,5 +1,5 @@
 @php
-// Simulação de dados de clientes (ERPs)
+// Simulação de dados de Leads (ERPs)
 $erps = [
 [
 'name' => 'ImobSystem Pro',

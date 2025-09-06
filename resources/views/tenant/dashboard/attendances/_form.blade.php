@@ -1,9 +1,9 @@
 <div class="row mb-3">
     <div class="col-md-6">
         <div class="mb-3">
-            <label class="form-label">{{ __('Cliente') }}</label>
+            <label class="form-label">{{ __('Lead') }}</label>
             <select name="customer_id" class="form-select @error('customer_id') is-invalid @enderror" required>
-                <option value="">{{ __('Selecione um cliente') }}</option>
+                <option value="">{{ __('Selecione um Lead') }}</option>
                 @foreach ($customers as $customer)
                     <option value="{{ $customer->id }}" {{ old('customer_id', $attendance->customer_id ?? '') == $customer->id ? 'selected' : '' }}>
                         {{ $customer->name }}

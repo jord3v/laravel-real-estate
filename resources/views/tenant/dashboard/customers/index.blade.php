@@ -5,13 +5,13 @@
     <div class="container-xl">
         <div class="row g-2 align-items-center">
             <div class="col">
-                <h2 class="page-title">{{ __('Clientes') }}</h2>
+                <h2 class="page-title">{{ __('Leads') }}</h2>
             </div>
             <div class="col-auto ms-auto d-print-none">
                 <div class="btn-list">
                     <a href="{{ route('customers.create') }}" class="btn btn-primary d-none d-sm-inline-block">
                         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14"/><path d="M5 12l14 0"/></svg>
-                        {{ __('Novo Cliente') }}
+                        {{ __('Novo Lead') }}
                     </a>
                 </div>
             </div>
@@ -59,7 +59,7 @@
                         <div class="col-6 col-md-3 ms-auto d-flex justify-content-end align-items-center">
                             <div class="btn-list flex-nowrap">
                                 <a href="{{ route('customers.edit', $customer) }}" class="btn btn-sm">{{ __('Editar') }}</a>
-                                <form action="{{ route('customers.destroy', $customer) }}" method="POST" onsubmit="return confirm('{{ __('Tem certeza que deseja excluir este cliente?') }}');" class="d-none d-md-inline-block">
+                                <form action="{{ route('customers.destroy', $customer) }}" method="POST" onsubmit="return confirm('{{ __('Tem certeza que deseja excluir este Lead?') }}');" class="d-none d-md-inline-block">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-danger">{{ __('Excluir') }}</button>
@@ -71,7 +71,7 @@
                 @empty
                     <div class="list-group-item">
                         <div class="text-center text-muted py-5">
-                            {{ __('Nenhum cliente encontrado.') }}
+                            {{ __('Nenhum Lead encontrado.') }}
                         </div>
                     </div>
                 @endforelse

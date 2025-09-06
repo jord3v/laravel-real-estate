@@ -33,7 +33,7 @@
                         @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">{{ __('Tipo de Cliente') }}</label>
+                        <label class="form-label">{{ __('Tipo de Lead') }}</label>
                         <select name="type" class="form-select @error('type') is-invalid @enderror" required>
                             <option value="">{{ __('Selecione o tipo') }}</option>
                             <option value="lessor" {{ old('type', $customer->type ?? '') == 'lessor' ? 'selected' : '' }}>{{ __('Locador') }}</option>
@@ -123,7 +123,7 @@
                 <button type="button" class="btn btn-secondary" id="prev-step" style="display: none;">{{ __('Anterior') }}</button>
                 <div>
                     <button type="button" class="btn btn-primary" id="next-step">{{ __('Próximo') }}</button>
-                    <button type="submit" class="btn btn-primary" id="save-customer" style="display: none;">{{ __('Salvar Cliente') }}</button>
+                    <button type="submit" class="btn btn-primary" id="save-customer" style="display: none;">{{ __('Salvar Lead') }}</button>
                 </div>
             </div>
         </div>

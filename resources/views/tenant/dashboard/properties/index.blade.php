@@ -5,7 +5,7 @@
     <div class="container-xl">
         <div class="row g-2 align-items-center">
             <div class="col">
-                <h2 class="page-title">{{ __('Controle de Imóveis') }}</h2>
+                <h2 class="page-title">{{ __('Imóveis') }}</h2>
             </div>
             <div class="col-auto ms-auto d-print-none">
                 <div class="btn-list">

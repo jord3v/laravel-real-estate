@@ -9,7 +9,24 @@ class Customer extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'email', 'phone', 'type'];
+    protected $fillable = [
+        'name',
+        'company_name',
+        'email',
+        'phone',
+        'type',
+        'document_type',
+        'cpf',
+        'cnpj',
+        'rg',
+        'marital_status',
+        'nationality',
+        'profession',
+        'spouse_name',
+        'spouse_rg',
+        'spouse_cpf',
+        'spouse_profession',
+    ];
 
     // Uma pessoa pode ser proprietária de muitos imóveis
     public function properties()

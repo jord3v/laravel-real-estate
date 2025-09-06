@@ -13,7 +13,7 @@
 
 <div class="page-body">
     <div class="container-xl">
-        <form id="property-form" action="{{ route('properties.store') }}" method="POST">
+    <form id="property-form" action="{{ route('properties.store') }}" method="POST" class="needs-validation" novalidate>
             @include('tenant.dashboard.properties._form', ['owners' => $owners])
         </form>
     </div>

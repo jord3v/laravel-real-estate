@@ -27,7 +27,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h3 class="card-title">{{ __('Informações do Atendimento') }}</h3>
-                        <p><strong>{{ __('Cliente:') }}</strong> {{ $attendance->customer->name }}</p>
+                        <p><strong>{{ __('Lead:') }}</strong> {{ $attendance->customer->name }}</p>
                         <p><strong>{{ __('Imóvel:') }}</strong> {{ $attendance->property->code ?? 'N/A' }}</p>
                         <p><strong>{{ __('Status Atual:') }}</strong> 
                             <span class="badge bg-secondary-lt">

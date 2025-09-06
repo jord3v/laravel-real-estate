@@ -182,7 +182,7 @@
         </a>
         <div class="dropdown-menu @if($isPeopleActive) show @endif">
             <a class="dropdown-item @if(request()->routeIs('customers.*')) active @endif" href="{{ route('customers.index') }}">
-                {{ __('Clientes') }}
+                {{ __('Leads') }}
             </a>
             <a class="dropdown-item @if(request()->routeIs('payments.*')) active @endif" href="{{ route('payments.index') }}">
                 {{ __('Pagamentos') }}
@@ -337,9 +337,7 @@
                      </div>
                   </div>
                </div>
-               <div class="collapse navbar-collapse" id="navbar-menu">
-                  remover  
-               </div>
+               <div class="collapse navbar-collapse"></div>
             </div>
          </header>
          <div class="page-wrapper">
@@ -392,6 +390,27 @@
          </div>
       </div>
       <script src="{{ mix('js/app.js') }}" defer></script>
+      <script>
+         // Example starter JavaScript for disabling form submissions if there are invalid fields
+         (() => {
+         'use strict'
+
+         // Fetch all the forms we want to apply custom Bootstrap validation styles to
+         const forms = document.querySelectorAll('.needs-validation')
+
+         // Loop over them and prevent submission
+         Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+               if (!form.checkValidity()) {
+               event.preventDefault()
+               event.stopPropagation()
+               }
+
+               form.classList.add('was-validated')
+            }, false)
+         })
+         })()
+      </script>
       @stack('scripts')
    </body>
 </html>

@@ -23,7 +23,7 @@ class Attendance extends Model
         return $this->belongsTo(Property::class);
     }
 
-    // Relacionamento com o cliente/prospect
+    // Relacionamento com o Lead/prospect
     public function customer()
     {
         return $this->belongsTo(Customer::class);

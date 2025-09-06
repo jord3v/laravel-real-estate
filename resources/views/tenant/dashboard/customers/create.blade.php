@@ -5,7 +5,7 @@
     <div class="container-xl">
         <div class="row g-2 align-items-center">
             <div class="col">
-                <h2 class="page-title">{{ __('Novo Cliente') }}</h2>
+                <h2 class="page-title">{{ __('Novo Lead') }}</h2>
             </div>
         </div>
     </div>
@@ -14,7 +14,7 @@
 <div class="page-body">
     <div class="container-xl">
         <div class="card">
-            <form action="{{ route('customers.store') }}" method="POST">
+            <form action="{{ route('customers.store') }}" method="POST" class="needs-validation" novalidate>
                 @csrf
                 @include('tenant.dashboard.customers._form')
             </form>
