@@ -11,20 +11,46 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Http\Requests\LeaseStoreRequest;
+use App\Http\Requests\LeaseUpdateRequest;
 use App\Models\Payment;
 use Exception;
 
 class LeaseController extends Controller
 {
-    public function index(): \Illuminate\View\View
+    /**
+     * Exibe o formulário de edição de contrato.
+     */
+    public function edit(Lease $lease)
     {
-        $leases = Lease::with(['lessor', 'lessee', 'property', 'payments'])
-            ->latest()
-            ->paginate(15);
-        return view('tenant.dashboard.leases.index', compact('leases'));
+        $lessors = Customer::where('type', 'lessor')->get();
+        $lessees = Customer::where('type', 'lessee')->get();
+        $guarantors = Customer::where('type', 'guarantor')->get();
+        $properties = Property::all();
+        return view('tenant.dashboard.leases.edit', compact('lease', 'lessors', 'lessees', 'guarantors', 'properties'));
     }
-
-    public function create(): \Illuminate\View\View
+    /**
+     * Salva um novo contrato de locação.
+     */
+    public function store(LeaseStoreRequest $request)
+    {
+        $data = $request->validated();
+        $data['benfeitorias'] = $request->has('benfeitorias');
+        $data['monetary_correction'] = $request->has('monetary_correction');
+        $data['end_date'] = Carbon::parse($data['start_date'])->addMonths((int)$data['term_months']);
+        DB::transaction(function () use ($data) {
+            $lease = Lease::create($data);
+            Guarantee::create([
+                'lease_id' => $lease->id,
+                'type' => $data['guarantee_type'],
+            ]);
+        });
+        return redirect()->route('leases.index')->with('success', 'Contrato cadastrado com sucesso!');
+    }
+    /**
+     * Exibe o formulário de criação de contrato.
+     */
+    public function create()
     {
         $lessors = Customer::where('type', 'lessor')->get();
         $lessees = Customer::where('type', 'lessee')->get();
@@ -32,63 +58,15 @@ class LeaseController extends Controller
         $properties = Property::all();
         return view('tenant.dashboard.leases.create', compact('lessors', 'lessees', 'guarantors', 'properties'));
     }
-
-    public function store(\Illuminate\Http\Request $request): \Illuminate\Http\RedirectResponse
+    /**
+     * Lista todos os contratos de locação.
+     */
+    public function index()
     {
-        try {
-            $validated = $request->validate([
-                'lessor_id' => 'required|exists:customers,id',
-                'lessee_id' => 'required|exists:customers,id',
-                'property_id' => 'required|exists:properties,id',
-                'contract_type' => 'nullable|string',
-                'term_months' => 'required|integer|min:1',
-                'start_date' => 'required|date',
-                'rent_amount' => 'required|numeric|min:0',
-                'due_day' => 'required|integer|min:1|max:31',
-                'payment_place' => 'nullable|string',
-                'readjustment_index' => 'required|string',
-                'alternative_indexes' => 'nullable|array',
-                'late_payment_fine_percent' => 'nullable|numeric|min:0',
-                'late_payment_fine_limit' => 'nullable|numeric|min:0',
-                'late_payment_interest' => 'nullable|numeric|min:0',
-                'monetary_correction' => 'nullable|boolean',
-                'additional_charges' => 'nullable|array',
-                'use_destination' => 'required|string',
-                'maintenance_obligations' => 'required|string',
-                'benfeitorias' => 'nullable|boolean',
-                'guarantee_type' => 'required|string|in:fianca,caucao_dinheiro,seguro_fianca,caucao_imobiliaria',
-                'guarantor_id' => 'required_if:guarantee_type,fianca|nullable|exists:customers,id',
-                'attorney_fees_percent' => 'required|numeric|min:0',
-                'elected_forum' => 'required|string',
-                'via_count' => 'required|integer|min:1',
-            ]);
-            $validated['benfeitorias'] = $request->has('benfeitorias');
-            $validated['monetary_correction'] = $request->has('monetary_correction');
-            $validated['end_date'] = \Carbon\Carbon::parse($validated['start_date'])->addMonths((int)$validated['term_months']);
-
-            DB::transaction(function () use ($validated) {
-                $lease = Lease::create($validated);
-                \App\Models\Guarantee::create([
-                    'lease_id' => $lease->id,
-                    'type' => $validated['guarantee_type'],
-                ]);
-            });
-            return redirect()->route('leases.index')->with('success', 'Contrato cadastrado com sucesso!');
-        } catch (ValidationException $e) {
-            return back()->withInput()->withErrors($e->errors());
-        } catch (\Exception $e) {
-            return back()->withInput()->withErrors(['error' => 'Ocorreu um erro ao salvar o contrato: ' . $e->getMessage()]);
-        }
-    }
-
-    public function edit(Lease $lease)
-    {
-        $lessors = Customer::where('type', 'lessor')->get();
-        $lessees = Customer::where('type', 'lessee')->get();
-        $guarantors = Customer::where('type', 'guarantor')->get();
-        $properties = Property::all();
-
-        return view('tenant.dashboard.leases.edit', compact('lease', 'lessors', 'lessees', 'guarantors', 'properties'));
+        $leases = Lease::with(['lessor', 'lessee', 'property', 'payments'])
+            ->latest()
+            ->paginate(15);
+        return view('tenant.dashboard.leases.index', compact('leases'));
     }
 
     public function update(Request $request, Lease $lease)
@@ -152,11 +130,11 @@ class LeaseController extends Controller
     public function destroy(Lease $lease)
     {
         $lease->delete();
-        return redirect()->route('leases.index')->with('success', 'Contrato excluído com sucesso!');
+        return redirect()->route('leases.index')->with('success', 'Contrato removido com sucesso!');
     }
 
     /**
-     * Calcula o cronograma de pagamentos para pré-visualização, com descrições detalhadas.
+     * Simula os pagamentos do contrato antes de salvar.
      */
     public function previewPayments(Lease $lease)
     {
@@ -181,7 +159,7 @@ class LeaseController extends Controller
             $payments[] = [
                 'amount' => round($proRataAmount, 2),
                 'payment_date' => $currentDate->copy(),
-                'reference_date' => $currentDate->copy(), // reference_date igual a payment_date
+                'reference_date' => $currentDate->copy(),
                 'status' => 'pending',
                 'description' => "Aluguel (Pro-rata) - Parcela {$installmentCount} (Ref. {$currentDate->translatedFormat('F Y')})",
                 'type' => 'income',
@@ -207,7 +185,7 @@ class LeaseController extends Controller
             $payments[] = [
                 'amount' => $rentAmount,
                 'payment_date' => $paymentDate,
-                'reference_date' => $paymentDate->copy(), // reference_date igual a payment_date
+                'reference_date' => $paymentDate->copy(),
                 'status' => 'pending',
                 'description' => $description,
                 'type' => 'income',

@@ -34,8 +34,8 @@ class PropertyController extends Controller
 
     public function store(PropertyFormRequest $request): RedirectResponse
     {
-        $this->property->create($request->validated());
-        return redirect()->route('properties.index')->with('status', 'Imóvel cadastrado com sucesso!');
+    $this->property->create($request->validated());
+    return redirect()->route('properties.index')->with('status', 'Imóvel cadastrado com sucesso!');
     }
 
     public function edit(Property $property): View
@@ -46,8 +46,8 @@ class PropertyController extends Controller
 
     public function update(PropertyFormRequest $request, Property $property): RedirectResponse
     {
-        $property->update($request->validated());
-        return redirect()->route('properties.index')->with('status', 'Imóvel atualizado com sucesso!');
+    $property->update($request->validated());
+    return redirect()->route('properties.index')->with('status', 'Imóvel atualizado com sucesso!');
     }
 
     public function destroy(Property $property): RedirectResponse

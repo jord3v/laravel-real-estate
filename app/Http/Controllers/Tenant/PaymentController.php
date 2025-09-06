@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Tenant;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\Lease;
-use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
+use App\Http\Requests\PaymentStoreRequest;
+use App\Http\Requests\PaymentUpdateRequest;
+use App\Http\Requests\PaymentReceiveRequest;
 use DB;
 use Exception;
 
@@ -29,16 +30,10 @@ class PaymentController extends Controller
         return view('tenant.dashboard.payments.create', compact('leases'));
     }
 
-    public function store(\Illuminate\Http\Request $request): \Illuminate\Http\RedirectResponse
+    public function store(PaymentStoreRequest $request): \Illuminate\Http\RedirectResponse
     {
-        $validated = $request->validate([
-            'lease_id' => 'required|exists:leases,id',
-            'amount' => 'required|numeric|min:0',
-            'payment_date' => 'required|date',
-            'status' => 'required|in:paid,overdue,pending',
-        ]);
-        $this->payment->create($validated);
-        return redirect()->route('payments.index')->with('status', 'Pagamento registrado com sucesso!');
+    $this->payment->create($request->validated());
+    return redirect()->route('payments.index')->with('status', 'Pagamento registrado com sucesso!');
     }
 
     public function edit(Payment $payment): \Illuminate\View\View
@@ -47,19 +42,11 @@ class PaymentController extends Controller
         return view('tenant.dashboard.payments.edit', compact('payment', 'leases'));
     }
 
-    public function update(\Illuminate\Http\Request $request, Payment $payment): \Illuminate\Http\RedirectResponse
+    public function update(PaymentUpdateRequest $request, Payment $payment): \Illuminate\Http\RedirectResponse
     {
-        $validated = $request->validate([
-            'lease_id' => 'required|exists:leases,id',
-            'amount' => 'required|numeric|min:0',
-            'payment_date' => 'required|date',
-            'status' => 'required|in:paid,overdue,pending',
-        ]);
-
-        $payment->update($validated);
-
-        return redirect()->route('payments.index')
-                         ->with('status', 'Pagamento atualizado com sucesso!');
+    $payment->update($request->validated());
+    return redirect()->route('payments.index')
+             ->with('status', 'Pagamento atualizado com sucesso!');
     }
 
     /**
@@ -76,36 +63,25 @@ class PaymentController extends Controller
     /**
      * Atualiza um pagamento no banco de dados.
      */
-    public function receive(Request $request, Lease $lease, Payment $payment)
+    public function receive(PaymentReceiveRequest $request, Lease $lease, Payment $payment)
     {
         try {
-            $validated = $request->validate([
-                'paid_at' => 'required|date',
-                'paid_amount' => 'required|numeric|min:0',
-                'payment_method' => 'required|string',
-                'transaction_code' => 'nullable|string',
-                'notes' => 'nullable|string',
-            ]);
-            
-            DB::transaction(function () use ($validated, $payment) {
-                // A validação agora checa o valor do boleto vs. o valor pago.
-                // Se o valor pago for menor, o status é 'partially_overdue'.
-                $status = ($validated['paid_amount'] < $payment->amount) ? 'partially_overdue' : 'paid';
-
+            DB::transaction(function () use ($request, $payment) {
+                $data = $request->validated();
+                $status = ($data['paid_amount'] < $payment->amount) ? 'partially_overdue' : 'paid';
                 $payment->update([
-                    'paid_at' => $validated['paid_at'],
-                    'paid_amount' => $validated['paid_amount'],
-                    'payment_method' => $validated['payment_method'],
-                    'transaction_code' => $validated['transaction_code'],
-                    'notes' => $validated['notes'],
+                    'paid_at' => $data['paid_at'],
+                    'paid_amount' => $data['paid_amount'],
+                    'payment_method' => $data['payment_method'],
+                    'transaction_code' => $data['transaction_code'],
+                    'notes' => $data['notes'],
                     'status' => $status,
                 ]);
             });
 
             return back()->with('success', 'Pagamento recebido com sucesso!');
 
-        } catch (ValidationException $e) {
-            return back()->withInput()->withErrors($e->errors());
+        // Removido catch de ValidationException, pois o FormRequest já lida com erros de validação automaticamente
         } catch (Exception $e) {
             return back()->withInput()->withErrors(['error' => 'Ocorreu um erro ao receber o pagamento: ' . $e->getMessage()]);
         }

@@ -6,7 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Customer;
 use App\Models\Property;
-use Illuminate\Http\Request;
+use App\Http\Requests\AttendanceStoreRequest;
+use App\Http\Requests\AttendanceUpdateRequest;
 
 class AttendanceController extends Controller
 {
@@ -33,18 +34,11 @@ class AttendanceController extends Controller
         return view('tenant.dashboard.attendances.create', compact('properties', 'customers', 'statuses'));
     }
 
-    public function store(\Illuminate\Http\Request $request): \Illuminate\Http\RedirectResponse
+    public function store(AttendanceStoreRequest $request): \Illuminate\Http\RedirectResponse
     {
-        $validated = $request->validate([
-            'property_id' => 'nullable|exists:properties,id',
-            'customer_id' => 'required|exists:customers,id',
-            'status' => 'required|string|max:255',
-            'notes' => 'nullable|string',
-            'attended_at' => 'nullable|date',
-        ]);
-        $attendance = $this->attendance->create($validated);
-        $attendance->history()->create(['new_status' => $validated['status']]);
-        return redirect()->route('attendances.index')->with('success', 'Atendimento cadastrado com sucesso!');
+    $attendance = $this->attendance->create($request->validated());
+    $attendance->history()->create(['new_status' => $request->validated()['status']]);
+    return redirect()->route('attendances.index')->with('success', 'Atendimento cadastrado com sucesso!');
     }
 
     public function show(Attendance $attendance): \Illuminate\View\View
@@ -64,20 +58,11 @@ class AttendanceController extends Controller
     /**
      * Atualiza um atendimento no banco de dados.
      */
-    public function update(Request $request, Attendance $attendance)
+    public function update(AttendanceUpdateRequest $request, Attendance $attendance)
     {
-        $validated = $request->validate([
-            'property_id' => 'nullable|exists:properties,id',
-            'customer_id' => 'required|exists:customers,id',
-            'status' => 'required|string|max:255',
-            'notes' => 'nullable|string',
-            'attended_at' => 'nullable|date',
-        ]);
-        
-        $oldStatus = $attendance->status;
-        $oldNotes = $attendance->notes;
-
-        $attendance->update($validated);
+    $oldStatus = $attendance->status;
+    $oldNotes = $attendance->notes;
+    $attendance->update($request->validated());
 
         if ($oldStatus !== $attendance->status || $oldNotes !== $attendance->notes) {
             $attendance->history()->create([
