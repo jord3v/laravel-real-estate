@@ -23,9 +23,26 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         return [
             'id',
             'name',
-            'email'
+            'email',
+            'phones',
+            'social',
+            'address',
+            'business_hours',
+            'theme',
         ];
     }
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'phones' => 'array', // array de objetos: [{number, whatsapp}]
+        'social' => 'array', // {facebook, instagram, linkedin, youtube}
+        'address' => 'array',
+        'business_hours' => 'array',
+    ];
 
     public function users()
     {

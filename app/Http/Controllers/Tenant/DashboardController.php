@@ -8,7 +8,7 @@ use App\Models\Lease;
 use App\Models\Customer;
 use App\Models\Attendance;
 use App\Models\Payment;
-use Illuminate\Http\Request;
+use App\Http\Requests\UpdateTenantRequest;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -140,4 +140,66 @@ class DashboardController extends Controller
             'upcomingPayments', 'topIncomes', 'topExpenses'
         ));
     }
+        public function edit()
+    {
+        $tenant = tenant();
+        // Consome a API do Bootswatch
+        $themes = [];
+        try {
+            $response = @file_get_contents('https://bootswatch.com/api/5.json');
+            if ($response) {
+                $json = json_decode($response, true);
+                $themes = $json['themes'] ?? [];
+            }
+        } catch (\Exception $e) {
+            $themes = [];
+        }
+        return view('tenant.dashboard.edit', compact('tenant', 'themes'));
+    }
+
+        public function update(UpdateTenantRequest $request)
+        {
+            $tenant = tenant();
+            $data = $request->validated();
+
+            // Telefones: array de objetos [{number, whatsapp}]
+            $phones = $request->input('phones', []);
+            $phonesWhatsapp = $request->input('phones_whatsapp', []);
+            $phonesArray = [];
+            foreach ($phones as $idx => $number) {
+                $phonesArray[] = [
+                    'number' => $number,
+                    'whatsapp' => in_array($idx, (array)$phonesWhatsapp),
+                ];
+            }
+            $data['phones'] = $phonesArray;
+
+            // Endereço
+            $data['address'] = [
+                'cep' => $request->input('address.cep'),
+                'street' => $request->input('address.street'),
+                'number' => $request->input('address.number'),
+                'neighborhood' => $request->input('address.neighborhood'),
+                'city' => $request->input('address.city'),
+                'state' => $request->input('address.state'),
+            ];
+
+            // Horários de atendimento
+            $data['business_hours'] = $request->input('business_hours', []);
+
+            // Redes sociais: salva como array
+            $data['social'] = [
+                'facebook' => $request->input('social.facebook'),
+                'instagram' => $request->input('social.instagram'),
+                'linkedin' => $request->input('social.linkedin'),
+                'youtube' => $request->input('social.youtube'),
+            ];
+
+            // Tema do site
+            $data['theme'] = $request->input('theme');
+
+            // Salva tudo no modelo
+            $tenant->update($data);
+            return redirect()->route('tenant.dashboard.edit')->with('success', 'Dados do tenant atualizados com sucesso!');
+        }
 }

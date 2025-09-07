@@ -101,6 +101,9 @@ class TenancyServiceProvider extends ServiceProvider
         $this->mapRoutes();
 
         $this->makeTenancyMiddlewareHighestPriority();
+        \Stancl\Tenancy\Middleware\InitializeTenancyByDomain::$onFail = function () {
+            dd("Tenant not found");
+        };
     }
 
     protected function bootEvents()

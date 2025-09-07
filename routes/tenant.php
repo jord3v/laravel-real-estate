@@ -36,7 +36,9 @@ Route::middleware([
     });
 
     Route::middleware(['auth'])->prefix('dashboard')->group(function () {
-        Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/edit', [DashboardController::class, 'edit'])->name('tenant.dashboard.edit');
+    Route::put('/update', [DashboardController::class, 'update'])->name('tenant.dashboard.update');
         Route::prefix('properties')->name('properties.')->group(function () {
             Route::resource('/', PropertyController::class)->names('')->parameters(['' => 'property']);
             Route::post('/generate-ai-description', [PropertyController::class, 'generateDescriptionWithAi'])->name('generateDescriptionWithAi');

@@ -169,26 +169,37 @@
         </a>
     </li>
 
-    {{-- Menu Dropdown de Pessoas --}}
-    @php
-        $isPeopleActive = request()->routeIs('customers.*') || request()->routeIs('payments.*');
-    @endphp
-    <li class="nav-item dropdown @if($isPeopleActive) active @endif">
-        <a class="nav-link dropdown-toggle" href="#navbar-pessoas" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="{{ $isPeopleActive ? 'true' : 'false' }}">
-            <span class="nav-link-icon d-md-none d-lg-inline-block">
-                <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-users"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" /><path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /><path d="M21 21v-2a4 4 0 0 0 -3 -3.85" /></svg>
-            </span>
-            <span class="nav-link-title">{{ __('Pessoas') }}</span>
-        </a>
-        <div class="dropdown-menu @if($isPeopleActive) show @endif">
-            <a class="dropdown-item @if(request()->routeIs('customers.*')) active @endif" href="{{ route('customers.index') }}">
-                {{ __('Leads') }}
-            </a>
-            <a class="dropdown-item @if(request()->routeIs('payments.*')) active @endif" href="{{ route('payments.index') }}">
-                {{ __('Pagamentos') }}
-            </a>
-        </div>
-    </li>
+   {{-- Menu Dropdown de Pessoas --}}
+   @php
+      $isPeopleActive = request()->routeIs('customers.*') || request()->routeIs('payments.*');
+   @endphp
+   <li class="nav-item dropdown @if($isPeopleActive) active @endif">
+      <a class="nav-link dropdown-toggle" href="#navbar-pessoas" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="{{ $isPeopleActive ? 'true' : 'false' }}">
+         <span class="nav-link-icon d-md-none d-lg-inline-block">
+            <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-users"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" /><path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /><path d="M21 21v-2a4 4 0 0 0 -3 -3.85" /></svg>
+         </span>
+         <span class="nav-link-title">{{ __('Pessoas') }}</span>
+      </a>
+      <div class="dropdown-menu @if($isPeopleActive) show @endif">
+         <a class="dropdown-item @if(request()->routeIs('customers.*')) active @endif" href="{{ route('customers.index') }}">
+            {{ __('Leads') }}
+         </a>
+         <a class="dropdown-item @if(request()->routeIs('payments.*')) active @endif" href="{{ route('payments.index') }}">
+            {{ __('Pagamentos') }}
+         </a>
+      </div>
+   </li>
+
+
+   {{-- Configurações do Sistema --}}
+   <li class="nav-item @if(request()->routeIs('tenant.dashboard.edit')) active @endif">
+      <a class="nav-link" href="{{ route('tenant.dashboard.edit') }}">
+         <span class="nav-link-icon d-md-none d-lg-inline-block">
+            <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-settings"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>
+         </span>
+         <span class="nav-link-title"> {{ __('Configurações do Sistema') }} </span>
+      </a>
+   </li>
 </ul>
                </div>
             </div>
@@ -390,6 +401,96 @@
          </div>
       </div>
       <script src="{{ mix('js/app.js') }}" defer></script>
+     <script>
+// Função genérica para navegação de steps
+function initStepNavigation(formNavId, formStepsId, prevBtnId, nextBtnId, saveBtnId, cancelBtnId) {
+   const formNav = document.getElementById(formNavId);
+   const formSteps = document.getElementById(formStepsId);
+   const prevBtn = document.getElementById(prevBtnId);
+   const nextBtn = document.getElementById(nextBtnId);
+   const saveBtn = saveBtnId ? document.getElementById(saveBtnId) : null;
+   const cancelBtn = cancelBtnId ? document.getElementById(cancelBtnId) : null;
+   if (!formNav || !formSteps) return;
+   let currentStep = 0;
+   const steps = formSteps.querySelectorAll('.tab-pane');
+   const navLinks = formNav.querySelectorAll('.list-group-item');
+   const totalSteps = steps.length;
+   function showStep(step) {
+      navLinks.forEach((link, idx) => link.classList.toggle('active', idx === step));
+      steps.forEach((pane, idx) => {
+         pane.classList.toggle('active', idx === step);
+         pane.classList.toggle('show', idx === step);
+      });
+      if (prevBtn) prevBtn.style.display = step > 0 ? '' : 'none';
+      if (nextBtn) nextBtn.style.display = step < steps.length - 1 ? '' : 'none';
+      if (saveBtn) saveBtn.style.display = step === steps.length - 1 ? '' : 'none';
+      if (cancelBtn) cancelBtn.style.display = step === steps.length - 1 ? '' : 'none';
+   }
+   navLinks.forEach((link, idx) => {
+      link.addEventListener('click', function (e) {
+         e.preventDefault();
+         currentStep = idx;
+         showStep(currentStep);
+      });
+   });
+   if (nextBtn) nextBtn.addEventListener('click', function () {
+      if (currentStep < steps.length - 1) {
+         currentStep++;
+         showStep(currentStep);
+      }
+   });
+   if (prevBtn) prevBtn.addEventListener('click', function () {
+      if (currentStep > 0) {
+         currentStep--;
+         showStep(currentStep);
+      }
+   });
+   showStep(0);
+}
+
+// Função genérica para consulta de CEP
+function initCepLookup(cepId, addressId, neighborhoodId, cityId, stateId) {
+   const cepInput = document.getElementById(cepId);
+   const addressInput = document.getElementById(addressId);
+   const neighborhoodInput = neighborhoodId ? document.getElementById(neighborhoodId) : null;
+   const cityInput = document.getElementById(cityId);
+   const stateInput = document.getElementById(stateId);
+   if (cepInput && addressInput && cityInput && stateInput) {
+      cepInput.addEventListener('blur', function() {
+         const cep = cepInput.value.replace(/\D/g, '');
+         if (cep.length === 8) {
+            addressInput.value = '...';
+            if (neighborhoodInput) neighborhoodInput.value = '...';
+            cityInput.value = '...';
+            stateInput.value = '...';
+            fetch(`https://viacep.com.br/ws/${cep}/json/`)
+               .then(response => response.json())
+               .then(data => {
+                  if (!data.erro) {
+                     addressInput.value = data.logradouro;
+                     if (neighborhoodInput) neighborhoodInput.value = data.bairro;
+                     cityInput.value = data.localidade;
+                     stateInput.value = data.uf;
+                  } else {
+                     alert('CEP não encontrado.');
+                     addressInput.value = '';
+                     if (neighborhoodInput) neighborhoodInput.value = '';
+                     cityInput.value = '';
+                     stateInput.value = '';
+                  }
+               })
+               .catch(() => {
+                  alert('Erro ao buscar o CEP.');
+                  addressInput.value = '';
+                  if (neighborhoodInput) neighborhoodInput.value = '';
+                  cityInput.value = '';
+                  stateInput.value = '';
+               });
+         }
+      });
+   }
+}
+     </script>
       <script>
          // Example starter JavaScript for disabling form submissions if there are invalid fields
          (() => {
