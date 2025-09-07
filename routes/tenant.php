@@ -9,6 +9,7 @@ use App\Http\Controllers\Tenant\LeaseController;
 use App\Http\Controllers\Tenant\PaymentController;
 use App\Http\Controllers\Tenant\PropertyController;
 use App\Http\Controllers\Tenant\TrialController;
+use App\Http\Controllers\Tenant\WebsiteController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Features\UserImpersonation;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
@@ -31,14 +32,16 @@ Route::middleware([
     InitializeTenancyByDomain::class,
     PreventAccessFromCentralDomains::class,
 ])->group(function () {
-    Route::get('/', function () {
-        return 'This is your multi-tenant application. The id of the current tenant is ' . tenant('id');
-    });
-
+    
+    
+        Route::middleware(['maintenance'])->group(function () {
+        Route::get('/', [WebsiteController::class, 'index']);
+    });  
     Route::middleware(['auth'])->prefix('dashboard')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/edit', [DashboardController::class, 'edit'])->name('tenant.dashboard.edit');
     Route::put('/update', [DashboardController::class, 'update'])->name('tenant.dashboard.update');
+    Route::post('/disable-maintenance', [App\Http\Controllers\Tenant\DashboardController::class, 'disableMaintenanceMode'])->name('dashboard.disable_maintenance');
         Route::prefix('properties')->name('properties.')->group(function () {
             Route::resource('/', PropertyController::class)->names('')->parameters(['' => 'property']);
             Route::post('/generate-ai-description', [PropertyController::class, 'generateDescriptionWithAi'])->name('generateDescriptionWithAi');

@@ -172,6 +172,11 @@
                                                 </div>
                                             @endforeach
                                         </div>
+                                        <div class="form-group mt-4">
+                                            <label for="maintenance_mode">Modo manutenção</label>
+                                            <input type="checkbox" id="maintenance_mode" name="maintenance_mode" value="1" {{ old('maintenance_mode', $tenant->maintenance_mode ? true : false) ? 'checked' : '' }}>
+                                            <span>Marque para ativar o modo manutenção do site.</span>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="tab-pane" id="step-5" role="tabpanel">

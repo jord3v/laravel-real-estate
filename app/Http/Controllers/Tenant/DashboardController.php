@@ -14,6 +14,15 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    /**
+     * Remove o modo manutenção do tenant.
+     */
+    public function disableMaintenanceMode()
+    {
+        $tenant = tenant();
+        $tenant->update(['maintenance_mode' => null]);
+        return redirect()->route('tenant.dashboard.edit')->with('success', 'Modo manutenção desativado!');
+    }
     public function index(): \Illuminate\View\View
     {
         $funnelData = Attendance::query()
@@ -198,8 +207,17 @@ class DashboardController extends Controller
             // Tema do site
             $data['theme'] = $request->input('theme');
 
+            // Maintenance mode: salva diretamente
+            $tenant->maintenance_mode = $request->has('maintenance_mode') ? [
+                'time' => time(),
+                'retry' => null,
+                'allowed' => [],
+                'message' => 'O sistema está em manutenção. Voltamos em breve!'
+            ] : null;
+
             // Salva tudo no modelo
             $tenant->update($data);
+            $tenant->save();
             return redirect()->route('tenant.dashboard.edit')->with('success', 'Dados do tenant atualizados com sucesso!');
         }
 }

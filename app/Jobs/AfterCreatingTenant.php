@@ -30,5 +30,8 @@ class AfterCreatingTenant implements ShouldQueue
         });
 
         $tenant->update(['initial_migration_complete' => true]);
+        $tenant->putDownForMaintenance([
+            'message' => 'O sistema está em manutenção. Voltamos em breve!'
+        ]);
     }
 }
