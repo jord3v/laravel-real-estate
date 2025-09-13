@@ -10,6 +10,7 @@ use App\Http\Controllers\Tenant\PaymentController;
 use App\Http\Controllers\Tenant\PropertyController;
 use App\Http\Controllers\Tenant\TrialController;
 use App\Http\Controllers\Tenant\WebsiteController;
+use App\Http\Controllers\Tenant\FavoriteController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Features\UserImpersonation;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
@@ -32,11 +33,13 @@ Route::middleware([
     InitializeTenancyByDomain::class,
     PreventAccessFromCentralDomains::class,
 ])->group(function () {
-    
+        // Rota pública para retornar imóveis em JSON
+        Route::get('/api/properties', [PropertyController::class, 'publicJson']);
     
         Route::middleware(['maintenance'])->group(function () {
-        Route::get('/', [WebsiteController::class, 'index']);
-    });  
+            Route::get('/', [WebsiteController::class, 'index']);
+            Route::get('/search', [WebsiteController::class, 'search']);
+        });  
     Route::middleware(['auth'])->prefix('dashboard')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/edit', [DashboardController::class, 'edit'])->name('tenant.dashboard.edit');
@@ -73,4 +76,8 @@ Route::middleware([
     Route::get('impersonate/{token}', function ($token) {
         return UserImpersonation::makeResponse($token);
     })->name('impersonate');
+
+    // Rotas para favoritos via sessão/cookie
+    Route::post('/api/favorites/toggle', [FavoriteController::class, 'toggle']);
+    Route::get('/api/favorites/properties', [FavoriteController::class, 'properties']);
 });

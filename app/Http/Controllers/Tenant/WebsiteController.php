@@ -9,6 +9,13 @@ class WebsiteController extends Controller
 {
     public function index(Request $request)
     {
-        return 'This is your multi-tenant application. The id of the current tenant is ' . tenant('id');
+    $tenant = tenant();
+    return view('tenant.website.index', compact('tenant'));
+    }
+
+    public function search(Request $request)
+    {
+    $tenant = tenant();
+    return view('tenant.website.search', compact('tenant'));
     }
 }

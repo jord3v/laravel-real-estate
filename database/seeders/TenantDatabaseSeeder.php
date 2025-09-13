@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-
+use App\Models\Property;
 use Illuminate\Database\Seeder;
 use Database\Seeders\Central\UserSeeder;
 
@@ -14,7 +14,8 @@ class TenantDatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            TenantRolesAndPermissionsSeeder::class
+            TenantRolesAndPermissionsSeeder::class,
+            PropertySeeder::class
         ]);
     }
 }

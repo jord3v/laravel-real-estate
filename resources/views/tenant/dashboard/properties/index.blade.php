@@ -76,8 +76,8 @@
                                 @if(isset($property->compositions['bathrooms']))
                                     <span>{{ $property->compositions['bathrooms'] }} Banheiros</span>
                                 @endif
-                                @if(isset($property->compositions['parking_spots']))
-                                    <span>{{ $property->compositions['parking_spots'] }} Vagas</span>
+                                @if(isset($property->compositions['car_spaces']))
+                                    <span>{{ $property->compositions['car_spaces'] }} Vagas</span>
                                 @endif
                             </div>
                             <div class="d-flex flex-wrap gap-2 mt-1">

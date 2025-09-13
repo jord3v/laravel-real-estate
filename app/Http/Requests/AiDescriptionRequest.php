@@ -35,7 +35,7 @@ class AiDescriptionRequest extends FormRequest
             'compositions.suites' => 'nullable|integer',
             'compositions.bathrooms' => 'nullable|integer',
             'compositions.living_rooms' => 'nullable|integer',
-            'compositions.parking_spots' => 'nullable|integer',
+            'compositions.car_spaces' => 'nullable|integer',
             
             'dimensions.usable_area' => 'nullable|string',
             'dimensions.total_area' => 'nullable|string',

@@ -128,7 +128,7 @@
                             </div>
                             <div class="col-md-2 mb-3">
                                 <label class="form-label">{{ __('Vagas') }}</label>
-                                <input type="number" name="compositions[parking_spots]" class="form-control @error('compositions.parking_spots') is-invalid @enderror" value="{{ old('compositions.parking_spots', $property->compositions['parking_spots'] ?? '') }}">
+                                <input type="number" name="compositions[car_spaces]" class="form-control @error('compositions.car_spaces') is-invalid @enderror" value="{{ old('compositions.car_spaces', $property->compositions['car_spaces'] ?? '') }}">
                             </div>
                         </div>
                         <hr>

@@ -61,8 +61,8 @@ class Gemini
         if (isset($propertyData['compositions']['living_rooms'])) {
             $prompt .= "Salas: {$propertyData['compositions']['living_rooms']}\n";
         }
-        if (isset($propertyData['compositions']['parking_spots'])) {
-            $prompt .= "Vagas: {$propertyData['compositions']['parking_spots']}\n";
+        if (isset($propertyData['compositions']['car_spaces'])) {
+            $prompt .= "Vagas: {$propertyData['compositions']['car_spaces']}\n";
         }
 
         // Dimensões

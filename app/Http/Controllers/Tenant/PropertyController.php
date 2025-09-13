@@ -15,6 +15,100 @@ use Illuminate\Http\JsonResponse;
 
 class PropertyController extends Controller
 {
+    /**
+     * Retorna os imóveis em formato JSON para o site público.
+     */
+    public function publicJson(): \Illuminate\Http\JsonResponse
+    {
+        $query = Property::query()->with('media');
+    $type = request('type');
+    $purpose = request('purpose');
+    $minPrice = request('minPrice');
+    $maxPrice = request('maxPrice');
+    $location = request('location');
+    $bedrooms = request('bedrooms');
+    $bathrooms = request('bathrooms');
+    $parking = request('parking');
+    $ids = request('ids');
+    $perPage = (int) request('per_page', 6);
+    $page = (int) request('page', 1);
+        if ($ids) {
+            $idsArray = is_array($ids) ? $ids : explode(',', $ids);
+            $query->whereIn('id', $idsArray);
+        }
+
+        if ($type) {
+            $query->where('type', $type);
+        }
+        if ($purpose) {
+            $query->where('purpose', $purpose);
+        }
+        if ($minPrice || $maxPrice) {
+            $query->where(function ($q) use ($minPrice, $maxPrice) {
+                foreach (['sale', 'rental', 'season'] as $opt) {
+                    $q->orWhere(function ($sub) use ($opt, $minPrice, $maxPrice) {
+                        $sub->whereRaw("JSON_EXTRACT(business_options, '$.$opt.price') >= ?", [(int)($minPrice ?? 0)])
+                            ->whereRaw("JSON_EXTRACT(business_options, '$.$opt.price') <= ?", [(int)($maxPrice ?? 999999999)]);
+                    });
+                }
+            });
+        }
+        if ($location) {
+            $query->where(function ($q) use ($location) {
+                $q->whereRaw("LOWER(JSON_EXTRACT(address, '$.city')) LIKE ?", ["%".strtolower($location)."%"])
+                  ->orWhereRaw("LOWER(JSON_EXTRACT(address, '$.state')) LIKE ?", ["%".strtolower($location)."%"])
+                  ->orWhereRaw("LOWER(code) LIKE ?", ["%".strtolower($location)."%"]);
+            });
+        }
+        if ($bedrooms) {
+            $bedroomValues = explode(',', $bedrooms);
+            foreach ($bedroomValues as $val) {
+                $num = (int)rtrim($val, '+');
+                $query->whereRaw("JSON_EXTRACT(compositions, '$.bedrooms') >= ?", [$num]);
+            }
+        }
+        if ($bathrooms) {
+            $bathroomValues = explode(',', $bathrooms);
+            foreach ($bathroomValues as $val) {
+                $num = (int)rtrim($val, '+');
+                $query->whereRaw("JSON_EXTRACT(compositions, '$.bathrooms') >= ?", [$num]);
+            }
+        }
+        if ($parking) {
+            $parkingValues = explode(',', $parking);
+            foreach ($parkingValues as $val) {
+                $num = (int)rtrim($val, '+');
+                $query->whereRaw("JSON_EXTRACT(compositions, '$.car_spaces') >= ?", [$num]);
+            }
+        }
+
+        $properties = $query->latest()->paginate($perPage, ['*'], 'page', $page);
+        $result = $properties->getCollection()->map(function ($property) {
+            $images = $property->getMedia('property')->map(fn($media) => $media->getUrl('preview'))->toArray();
+            return [
+                'id' => $property->id,
+                'title' => $property->title ?? $property->description,
+                'code' => $property->code,
+                'purpose' => $property->purpose,
+                'price' => $property->business_options['sale']['price'] ?? $property->business_options['rental']['price'] ?? $property->business_options['season']['price'] ?? null,
+                'location' => $property->address['city'] ?? $property->address['state'] ?? '',
+                'description' => $property->description,
+                'bedrooms' => $property->compositions['bedrooms'] ?? 0,
+                'bathrooms' => $property->compositions['bathrooms'] ?? 0,
+                'parking' => $property->compositions['car_spaces'] ?? 0,
+                'area' => $property->dimensions['area'] ?? 0,
+                'imagens' => $images,
+                'type' => $property->type,
+            ];
+        });
+        return response()->json([
+            'data' => $result,
+            'current_page' => $properties->currentPage(),
+            'last_page' => $properties->lastPage(),
+            'per_page' => $properties->perPage(),
+            'total' => $properties->total(),
+        ]);
+    }
     public function __construct(
         private Property $property,
         private Customer $customer

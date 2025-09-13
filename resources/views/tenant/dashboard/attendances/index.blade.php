@@ -63,8 +63,8 @@
                                 @if(isset($attendance->compositions['bathrooms']))
                                     <span>{{ $attendance->compositions['bathrooms'] }} Banheiros</span>
                                 @endif
-                                @if(isset($attendance->compositions['parking_spots']))
-                                    <span>{{ $attendance->compositions['parking_spots'] }} Vagas</span>
+                                @if(isset($attendance->compositions['car_spaces']))
+                                    <span>{{ $attendance->compositions['car_spaces'] }} Vagas</span>
                                 @endif
                             </div>
                             <div class="d-flex flex-wrap gap-2 mt-1">
