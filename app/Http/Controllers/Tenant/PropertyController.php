@@ -66,7 +66,7 @@ class PropertyController extends Controller
                 $num = (int)rtrim($val, '+');
                 $query->whereRaw("JSON_EXTRACT(compositions, '$.bedrooms') >= ?", [$num]);
             }
-        }
+    }
         if ($bathrooms) {
             $bathroomValues = explode(',', $bathrooms);
             foreach ($bathroomValues as $val) {
