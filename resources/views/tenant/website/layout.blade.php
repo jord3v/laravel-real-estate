@@ -756,7 +756,7 @@
         }
         // =================================================================
     let currentSort = { key: 'price', order: 'asc' };
-    let favorites = [];
+    let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
     let compareList = JSON.parse(localStorage.getItem('compareList')) || [];
     // ...existing code...
         const MAX_COMPARE = 4;
@@ -956,7 +956,8 @@
             })
             .then(res => res.json())
             .then(data => {
-                favorites = data.favorites || [];
+                    favorites = data.favorites || [];
+                    localStorage.setItem('favorites', JSON.stringify(favorites));
                 // Se estiver mostrando favoritos, atualiza lista, senão só atualiza ícones
                 if (showingOnlyFavorites) {
                     fetch('/api/favorites/properties')
