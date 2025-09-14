@@ -494,7 +494,7 @@
     <header class="header-main sticky-top">
         <nav class="navbar navbar-expand-lg">
             <div class="container">
-                <a class="navbar-brand" href="#">
+                <a class="navbar-brand" href="/">
                     <div class="d-flex flex-column align-items-start">
                         <span class="logo-text"><i class="fa-solid fa-building-user me-2"></i><span id="nav-brand-name">{{$tenant->name}}</span></span>
                         <span class="creci-text">CRECI: <span id="nav-brand-creci">123456-J</span></span>
@@ -510,8 +510,8 @@
                     </div>
                     <div class="offcanvas-body">
                         <ul class="navbar-nav justify-content-center flex-grow-1 pe-3">
-                            <li class="nav-item"><a class="nav-link" href="#inicio">Início</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#busca">Buscar</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/">Início</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/search">Imóveis</a></li>
                             <li class="nav-item"><a class="nav-link" href="#imoveis">Imóveis</a></li>
                             <li class="nav-item"><a class="nav-link" href="#sobre">A Empresa</a></li>
                             <li class="nav-item"><a class="nav-link" href="#contato">Contato</a></li>
@@ -549,8 +549,8 @@
                 <div class="col-lg-2 col-md-6">
                     <h5 class="text-uppercase fw-bold mb-4">Links</h5>
                     <ul class="list-unstyled">
-                        <li class="mb-2"><a href="#inicio" class="footer-link">Início</a></li>
-                        <li class="mb-2"><a href="#imoveis" class="footer-link">Imóveis</a></li>
+                        <li class="mb-2"><a href="/" class="footer-link">Início</a></li>
+                        <li class="mb-2"><a href="/search" class="footer-link">Imóveis</a></li>
                         <li class="mb-2"><a href="#sobre" class="footer-link">A Empresa</a></li>
                         <li class="mb-2"><a href="#contato" class="footer-link">Contato</a></li>
                     </ul>
