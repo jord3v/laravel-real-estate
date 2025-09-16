@@ -62,24 +62,42 @@ class PropertyController extends Controller
         }
         if ($bedrooms) {
             $bedroomValues = explode(',', $bedrooms);
-            foreach ($bedroomValues as $val) {
-                $num = (int)rtrim($val, '+');
-                $query->whereRaw("JSON_EXTRACT(compositions, '$.bedrooms') >= ?", [$num]);
-            }
-    }
+            $query->where(function ($q) use ($bedroomValues) {
+                foreach ($bedroomValues as $val) {
+                    $num = (int)$val;
+                    if ($num === 3) {
+                        $q->orWhereRaw("JSON_EXTRACT(compositions, '$.bedrooms') >= ?", [$num]);
+                    } else {
+                        $q->orWhereRaw("JSON_EXTRACT(compositions, '$.bedrooms') = ?", [$num]);
+                    }
+                }
+            });
+        }
         if ($bathrooms) {
             $bathroomValues = explode(',', $bathrooms);
-            foreach ($bathroomValues as $val) {
-                $num = (int)rtrim($val, '+');
-                $query->whereRaw("JSON_EXTRACT(compositions, '$.bathrooms') >= ?", [$num]);
-            }
+            $query->where(function ($q) use ($bathroomValues) {
+                foreach ($bathroomValues as $val) {
+                    $num = (int)$val;
+                    if ($num === 3) {
+                        $q->orWhereRaw("JSON_EXTRACT(compositions, '$.bathrooms') >= ?", [$num]);
+                    } else {
+                        $q->orWhereRaw("JSON_EXTRACT(compositions, '$.bathrooms') = ?", [$num]);
+                    }
+                }
+            });
         }
         if ($parking) {
             $parkingValues = explode(',', $parking);
-            foreach ($parkingValues as $val) {
-                $num = (int)rtrim($val, '+');
-                $query->whereRaw("JSON_EXTRACT(compositions, '$.car_spaces') >= ?", [$num]);
-            }
+            $query->where(function ($q) use ($parkingValues) {
+                foreach ($parkingValues as $val) {
+                    $num = (int)$val;
+                    if ($num === 3) {
+                        $q->orWhereRaw("JSON_EXTRACT(compositions, '$.car_spaces') >= ?", [$num]);
+                    } else {
+                        $q->orWhereRaw("JSON_EXTRACT(compositions, '$.car_spaces') = ?", [$num]);
+                    }
+                }
+            });
         }
 
         $properties = $query->latest()->paginate($perPage, ['*'], 'page', $page);
