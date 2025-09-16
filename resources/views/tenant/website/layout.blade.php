@@ -512,7 +512,6 @@
                         <ul class="navbar-nav justify-content-center flex-grow-1 pe-3">
                             <li class="nav-item"><a class="nav-link" href="/">Início</a></li>
                             <li class="nav-item"><a class="nav-link" href="/search">Imóveis</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#imoveis">Imóveis</a></li>
                             <li class="nav-item"><a class="nav-link" href="#sobre">A Empresa</a></li>
                             <li class="nav-item"><a class="nav-link" href="#contato">Contato</a></li>
                         </ul>
@@ -550,7 +549,8 @@
                     <h5 class="text-uppercase fw-bold mb-4">Links</h5>
                     <ul class="list-unstyled">
                         <li class="mb-2"><a href="/" class="footer-link">Início</a></li>
-                        <li class="mb-2"><a href="/search" class="footer-link">Imóveis</a></li>
+                        <li class="mb-2"><a href="/search
+                        " class="footer-link">Imóveis</a></li>
                         <li class="mb-2"><a href="#sobre" class="footer-link">A Empresa</a></li>
                         <li class="mb-2"><a href="#contato" class="footer-link">Contato</a></li>
                     </ul>
@@ -697,18 +697,27 @@
                 const perPage = propertiesPerPage;
                 const page = currentPage;
 
-                params = new URLSearchParams({
-                    type: propertyType,
-                    purpose,
-                    location,
-                    minPrice,
-                    maxPrice,
-                    per_page: perPage,
-                    page
-                });
+
+                params = new URLSearchParams();
+                if (propertyType) params.append('type', propertyType);
+                if (purpose) params.append('purpose', purpose);
+                if (location) params.append('location', location);
+                if (minPrice && minPrice !== '0') params.append('minPrice', minPrice);
+                if (maxPrice && maxPrice !== '999999999') params.append('maxPrice', maxPrice);
+                if (perPage && perPage !== 6) params.append('per_page', perPage);
+                if (page && page !== 1) params.append('page', page);
                 bedrooms.forEach(val => params.append('bedrooms[]', val));
                 bathrooms.forEach(val => params.append('bathrooms[]', val));
                 parking.forEach(val => params.append('parking[]', val));
+
+                // Atualiza a query string da URL sem recarregar a página
+                let newUrl = window.location.pathname;
+                const queryString = params.toString();
+                if (queryString) {
+                    newUrl += '?' + queryString;
+                }
+                window.history.replaceState({}, '', newUrl);
+
                 const response = await fetch(`/api/properties?${params.toString()}`);
                 if (!response.ok) throw new Error('Erro ao buscar imóveis');
                 const data = await response.json();
