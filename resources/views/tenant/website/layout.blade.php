@@ -691,9 +691,9 @@
                 const priceRange = (document.getElementById('price-range')?.value || '0-999999999').split('-');
                 const minPrice = priceRange[0];
                 const maxPrice = priceRange[1];
-                const bedrooms = Array.from(document.querySelectorAll('input[name="bedrooms"]:checked')).map(cb => cb.value).join(',');
-                const bathrooms = Array.from(document.querySelectorAll('input[name="bathrooms"]:checked')).map(cb => cb.value).join(',');
-                const parking = Array.from(document.querySelectorAll('input[name="parking"]:checked')).map(cb => cb.value).join(',');
+                const bedrooms = Array.from(document.querySelectorAll('input[name="bedrooms[]"]:checked')).map(cb => cb.value);
+                const bathrooms = Array.from(document.querySelectorAll('input[name="bathrooms[]"]:checked')).map(cb => cb.value);
+                const parking = Array.from(document.querySelectorAll('input[name="parking[]"]:checked')).map(cb => cb.value);
                 const perPage = propertiesPerPage;
                 const page = currentPage;
 
@@ -703,12 +703,12 @@
                     location,
                     minPrice,
                     maxPrice,
-                    bedrooms,
-                    bathrooms,
-                    parking,
                     per_page: perPage,
                     page
                 });
+                bedrooms.forEach(val => params.append('bedrooms[]', val));
+                bathrooms.forEach(val => params.append('bathrooms[]', val));
+                parking.forEach(val => params.append('parking[]', val));
                 const response = await fetch(`/api/properties?${params.toString()}`);
                 if (!response.ok) throw new Error('Erro ao buscar imóveis');
                 const data = await response.json();

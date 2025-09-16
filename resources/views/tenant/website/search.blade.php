@@ -70,33 +70,33 @@
                                                 <div class="mb-2">
                                                     <label for="bed1" class="form-label">Dormitórios:</label>
                                                     <div class="btn-group w-100" role="group" aria-label="Dormitórios">
-                                                        <input type="checkbox" class="btn-check" name="bedrooms" value="1" id="bed1">
+                                                        <input type="checkbox" class="btn-check" name="bedrooms[]" value="1" id="bed1">
                                                         <label class="btn btn-outline-primary btn-sm" for="bed1">1</label>
-                                                        <input type="checkbox" class="btn-check" name="bedrooms" value="2" id="bed2">
+                                                        <input type="checkbox" class="btn-check" name="bedrooms[]" value="2" id="bed2">
                                                         <label class="btn btn-outline-primary btn-sm" for="bed2">2</label>
-                                                        <input type="checkbox" class="btn-check" name="bedrooms" value="3" id="bed3">
+                                                        <input type="checkbox" class="btn-check" name="bedrooms[]" value="3" id="bed3">
                                                         <label class="btn btn-outline-primary btn-sm" for="bed3">3+</label>
                                                     </div>
                                                 </div>
                                                 <div class="mb-2">
                                                     <label for="bath1" class="form-label">Banheiros:</label>
                                                     <div class="btn-group w-100" role="group" aria-label="Banheiros">
-                                                        <input type="checkbox" class="btn-check" name="bathrooms" value="1" id="bath1">
+                                                        <input type="checkbox" class="btn-check" name="bathrooms[]" value="1" id="bath1">
                                                         <label class="btn btn-outline-primary btn-sm" for="bath1">1</label>
-                                                        <input type="checkbox" class="btn-check" name="bathrooms" value="2" id="bath2">
+                                                        <input type="checkbox" class="btn-check" name="bathrooms[]" value="2" id="bath2">
                                                         <label class="btn btn-outline-primary btn-sm" for="bath2">2</label>
-                                                        <input type="checkbox" class="btn-check" name="bathrooms" value="3" id="bath3">
+                                                        <input type="checkbox" class="btn-check" name="bathrooms[]" value="3" id="bath3">
                                                         <label class="btn btn-outline-primary btn-sm" for="bath3">3+</label>
                                                     </div>
                                                 </div>
                                                 <div>
                                                     <label for="park1" class="form-label">Vagas:</label>
                                                     <div class="btn-group w-100" role="group" aria-label="Vagas">
-                                                        <input type="checkbox" class="btn-check" name="parking" value="1" id="park1">
+                                                        <input type="checkbox" class="btn-check" name="parking[]" value="1" id="park1">
                                                         <label class="btn btn-outline-primary btn-sm" for="park1">1</label>
-                                                        <input type="checkbox" class="btn-check" name="parking" value="2" id="park2">
+                                                        <input type="checkbox" class="btn-check" name="parking[]" value="2" id="park2">
                                                         <label class="btn btn-outline-primary btn-sm" for="park2">2</label>
-                                                        <input type="checkbox" class="btn-check" name="parking" value="3" id="park3">
+                                                        <input type="checkbox" class="btn-check" name="parking[]" value="3" id="park3">
                                                         <label class="btn btn-outline-primary btn-sm" for="park3">3+</label>
                                                     </div>
                                                 </div>

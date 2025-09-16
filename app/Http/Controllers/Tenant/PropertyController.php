@@ -15,92 +15,23 @@ use Illuminate\Http\JsonResponse;
 
 class PropertyController extends Controller
 {
+    public function __construct(
+        private Property $property,
+        private Customer $customer
+    ) {}
+
     /**
      * Retorna os imóveis em formato JSON para o site público.
      */
     public function publicJson(): \Illuminate\Http\JsonResponse
     {
-        $query = Property::query()->with('media');
-    $type = request('type');
-    $purpose = request('purpose');
-    $minPrice = request('minPrice');
-    $maxPrice = request('maxPrice');
-    $location = request('location');
-    $bedrooms = request('bedrooms');
-    $bathrooms = request('bathrooms');
-    $parking = request('parking');
-    $ids = request('ids');
-    $perPage = (int) request('per_page', 6);
-    $page = (int) request('page', 1);
-        if ($ids) {
-            $idsArray = is_array($ids) ? $ids : explode(',', $ids);
-            $query->whereIn('id', $idsArray);
-        }
+        $perPage = (int) request('per_page', 6);
+        $page = (int) request('page', 1);
+        $properties = Property::filter(request()->all())
+            ->with('media')
+            ->latest()
+            ->paginate($perPage, ['*'], 'page', $page);
 
-        if ($type) {
-            $query->where('type', $type);
-        }
-        if ($purpose) {
-            $query->where('purpose', $purpose);
-        }
-        if ($minPrice || $maxPrice) {
-            $query->where(function ($q) use ($minPrice, $maxPrice) {
-                foreach (['sale', 'rental', 'season'] as $opt) {
-                    $q->orWhere(function ($sub) use ($opt, $minPrice, $maxPrice) {
-                        $sub->whereRaw("JSON_EXTRACT(business_options, '$.$opt.price') >= ?", [(int)($minPrice ?? 0)])
-                            ->whereRaw("JSON_EXTRACT(business_options, '$.$opt.price') <= ?", [(int)($maxPrice ?? 999999999)]);
-                    });
-                }
-            });
-        }
-        if ($location) {
-            $query->where(function ($q) use ($location) {
-                $q->whereRaw("LOWER(JSON_EXTRACT(address, '$.city')) LIKE ?", ["%".strtolower($location)."%"])
-                  ->orWhereRaw("LOWER(JSON_EXTRACT(address, '$.state')) LIKE ?", ["%".strtolower($location)."%"])
-                  ->orWhereRaw("LOWER(code) LIKE ?", ["%".strtolower($location)."%"]);
-            });
-        }
-        if ($bedrooms) {
-            $bedroomValues = explode(',', $bedrooms);
-            $query->where(function ($q) use ($bedroomValues) {
-                foreach ($bedroomValues as $val) {
-                    $num = (int)$val;
-                    if ($num === 3) {
-                        $q->orWhereRaw("JSON_EXTRACT(compositions, '$.bedrooms') >= ?", [$num]);
-                    } else {
-                        $q->orWhereRaw("JSON_EXTRACT(compositions, '$.bedrooms') = ?", [$num]);
-                    }
-                }
-            });
-        }
-        if ($bathrooms) {
-            $bathroomValues = explode(',', $bathrooms);
-            $query->where(function ($q) use ($bathroomValues) {
-                foreach ($bathroomValues as $val) {
-                    $num = (int)$val;
-                    if ($num === 3) {
-                        $q->orWhereRaw("JSON_EXTRACT(compositions, '$.bathrooms') >= ?", [$num]);
-                    } else {
-                        $q->orWhereRaw("JSON_EXTRACT(compositions, '$.bathrooms') = ?", [$num]);
-                    }
-                }
-            });
-        }
-        if ($parking) {
-            $parkingValues = explode(',', $parking);
-            $query->where(function ($q) use ($parkingValues) {
-                foreach ($parkingValues as $val) {
-                    $num = (int)$val;
-                    if ($num === 3) {
-                        $q->orWhereRaw("JSON_EXTRACT(compositions, '$.car_spaces') >= ?", [$num]);
-                    } else {
-                        $q->orWhereRaw("JSON_EXTRACT(compositions, '$.car_spaces') = ?", [$num]);
-                    }
-                }
-            });
-        }
-
-        $properties = $query->latest()->paginate($perPage, ['*'], 'page', $page);
         $result = $properties->getCollection()->map(function ($property) {
             $images = $property->getMedia('property')->map(fn($media) => $media->getUrl('preview'))->toArray();
             return [
@@ -127,10 +58,6 @@ class PropertyController extends Controller
             'total' => $properties->total(),
         ]);
     }
-    public function __construct(
-        private Property $property,
-        private Customer $customer
-    ) {}
 
     public function index(): View
     {

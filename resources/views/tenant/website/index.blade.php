@@ -45,23 +45,23 @@
                                 <div class="row">
                                     <div class="col-md-4">
                                         <div class="filter-pills-group">
-                                            <input type="checkbox" class="btn-check" name="bedrooms" value="1" id="bed1"><label class="btn btn-outline-primary" for="bed1">1 Quarto</label>
-                                            <input type="checkbox" class="btn-check" name="bedrooms" value="2" id="bed2"><label class="btn btn-outline-primary" for="bed2">2 Quartos</label>
-                                            <input type="checkbox" class="btn-check" name="bedrooms" value="3" id="bed3"><label class="btn btn-outline-primary" for="bed3">3+ Quartos</label>
+                                            <input type="checkbox" class="btn-check" name="bedrooms[]" value="1" id="bed1"><label class="btn btn-outline-primary" for="bed1">1 Quarto</label>
+                                            <input type="checkbox" class="btn-check" name="bedrooms[]" value="2" id="bed2"><label class="btn btn-outline-primary" for="bed2">2 Quartos</label>
+                                            <input type="checkbox" class="btn-check" name="bedrooms[]" value="3" id="bed3"><label class="btn btn-outline-primary" for="bed3">3+ Quartos</label>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="filter-pills-group">
-                                            <input type="checkbox" class="btn-check" name="bathrooms" value="1" id="bath1"><label class="btn btn-outline-primary" for="bath1">1 Banheiro</label>
-                                            <input type="checkbox" class="btn-check" name="bathrooms" value="2" id="bath2"><label class="btn btn-outline-primary" for="bath2">2 Banheiros</label>
-                                            <input type="checkbox" class="btn-check" name="bathrooms" value="3" id="bath3"><label class="btn btn-outline-primary" for="bath3">3+ Banheiros</label>
+                                            <input type="checkbox" class="btn-check" name="bathrooms[]" value="1" id="bath1"><label class="btn btn-outline-primary" for="bath1">1 Banheiro</label>
+                                            <input type="checkbox" class="btn-check" name="bathrooms[]" value="2" id="bath2"><label class="btn btn-outline-primary" for="bath2">2 Banheiros</label>
+                                            <input type="checkbox" class="btn-check" name="bathrooms[]" value="3" id="bath3"><label class="btn btn-outline-primary" for="bath3">3+ Banheiros</label>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="filter-pills-group">
-                                            <input type="checkbox" class="btn-check" name="parking" value="1" id="park1"><label class="btn btn-outline-primary" for="park1">1 Vaga</label>
-                                            <input type="checkbox" class="btn-check" name="parking" value="2" id="park2"><label class="btn btn-outline-primary" for="park2">2 Vagas</label>
-                                            <input type="checkbox" class="btn-check" name="parking" value="3" id="park3"><label class="btn btn-outline-primary" for="park3">3+ Vagas</label>
+                                            <input type="checkbox" class="btn-check" name="parking[]" value="1" id="park1"><label class="btn btn-outline-primary" for="park1">1 Vaga</label>
+                                            <input type="checkbox" class="btn-check" name="parking[]" value="2" id="park2"><label class="btn btn-outline-primary" for="park2">2 Vagas</label>
+                                            <input type="checkbox" class="btn-check" name="parking[]" value="3" id="park3"><label class="btn btn-outline-primary" for="park3">3+ Vagas</label>
                                         </div>
                                     </div>
                                 </div>
