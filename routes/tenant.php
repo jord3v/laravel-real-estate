@@ -35,10 +35,13 @@ Route::middleware([
 ])->group(function () {
         // Rota pública para retornar imóveis em JSON
         Route::get('/api/properties', [PropertyController::class, 'publicJson']);
+            // Rota pública para página individual do imóvel
+            
     
         Route::middleware(['maintenance'])->group(function () {
             Route::get('/', [WebsiteController::class, 'index']);
             Route::get('/search', [WebsiteController::class, 'search']);
+            Route::get('/property/{id}', [PropertyController::class, 'show'])->name('property.show');
         });  
     Route::middleware(['auth'])->prefix('dashboard')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');

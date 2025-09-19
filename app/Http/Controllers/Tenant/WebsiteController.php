@@ -18,4 +18,13 @@ class WebsiteController extends Controller
     $tenant = tenant();
     return view('tenant.website.search', compact('tenant'));
     }
+    /**
+     * Exibe a página individual do imóvel por ID.
+     */
+    public function show($id)
+    {
+        $property = \App\Models\Property::findOrFail($id);
+        $tenant = tenant();
+        return view('tenant.website.property', compact('property', 'tenant'));
+    }
 }

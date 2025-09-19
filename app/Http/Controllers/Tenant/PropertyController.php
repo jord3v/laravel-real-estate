@@ -15,6 +15,15 @@ use Illuminate\Http\JsonResponse;
 
 class PropertyController extends Controller
 {
+    /**
+     * Exibe a página individual do imóvel por ID.
+     */
+    public function show($id)
+    {
+    $property = Property::findOrFail($id);
+    $tenant = tenant();
+    return view('tenant.website.property', compact('property', 'tenant'));
+    }
     public function __construct(
         private Property $property,
         private Customer $customer

@@ -685,9 +685,13 @@
                     return;
                 }
                 // Monta query string com filtros do formulário
-                const propertyType = document.getElementById('property-type').value;
-                const purpose = document.getElementById('purpose-select').value;
-                const location = document.getElementById('location-code').value;
+                const propertyTypeEl = document.getElementById('property-type');
+                const purposeEl = document.getElementById('purpose-select');
+                const locationEl = document.getElementById('location-code');
+                if (!propertyTypeEl || !purposeEl || !locationEl) return;
+                const propertyType = propertyTypeEl.value;
+                const purpose = purposeEl.value;
+                const location = locationEl.value;
                 const priceRange = (document.getElementById('price-range')?.value || '0-999999999').split('-');
                 const minPrice = priceRange[0];
                 const maxPrice = priceRange[1];
@@ -788,9 +792,11 @@
         }
 
         function updatePriceFilterOptions() {
-            const purpose = document.getElementById('purpose-select').value || 'Venda';
-            const ranges = priceRanges[purpose] || priceRanges['Venda'];
+            const purposeSelect = document.getElementById('purpose-select');
             const priceRangeSelect = document.getElementById('price-range');
+            if (!purposeSelect || !priceRangeSelect) return;
+            const purpose = purposeSelect.value || 'Venda';
+            const ranges = priceRanges[purpose] || priceRanges['Venda'];
             priceRangeSelect.innerHTML = '';
             ranges.forEach(range => {
                 const option = document.createElement('option');
@@ -908,7 +914,7 @@
             const sortPriceAscBtn = document.getElementById('sort-price-asc');
             const sortPriceDescBtn = document.getElementById('sort-price-desc');
             const showFavoritesBtn = document.getElementById('show-favorites-btn');
-
+            if (!gridViewBtn || !listViewBtn || !sortPriceAscBtn || !sortPriceDescBtn || !showFavoritesBtn) return;
             gridViewBtn.classList.toggle('active', currentView === 'grid');
             listViewBtn.classList.toggle('active', currentView === 'list');
             sortPriceAscBtn.classList.toggle('active', currentSort.key === 'price' && currentSort.order === 'asc');
@@ -1273,32 +1279,46 @@
             initializeScrollSpy();
             initializeChatWidget();
 
-            form.addEventListener('input', () => { currentPage = 1; fetchPropertiesData(); });
-            form.addEventListener('submit', (e) => { e.preventDefault(); currentPage = 1; fetchPropertiesData(); });
+            if (form) {
+                form.addEventListener('input', () => { currentPage = 1; fetchPropertiesData(); });
+                form.addEventListener('submit', (e) => { e.preventDefault(); currentPage = 1; fetchPropertiesData(); });
+            }
             if (itemsPerPageSelect) {
                 itemsPerPageSelect.addEventListener('change', (e) => { propertiesPerPage = parseInt(e.target.value, 10); currentPage = 1; fetchPropertiesData(); });
             }
-            purposeSelect.addEventListener('change', () => { updatePriceFilterOptions(); });
-            gridViewBtn.addEventListener('click', () => { currentView = 'grid'; propertyListContainer.classList.remove('list-view'); updateActiveButtons(); render(); });
-            listViewBtn.addEventListener('click', () => { currentView = 'list'; propertyListContainer.classList.add('list-view'); updateActiveButtons(); render(); });
-            sortPriceAscBtn.addEventListener('click', () => { currentSort = { key: 'price', order: 'asc' }; currentPage = 1; updateActiveButtons(); render(); });
-            sortPriceDescBtn.addEventListener('click', () => { currentSort = { key: 'price', order: 'desc' }; currentPage = 1; updateActiveButtons(); render(); });
-            showFavoritesBtn.addEventListener('click', () => {
-                showingOnlyFavorites = !showingOnlyFavorites;
-                updateActiveButtons();
-                currentPage = 1;
-                if (showingOnlyFavorites) {
-                    fetch('/api/favorites/properties')
-                        .then(res => res.json())
-                        .then(favData => {
-                            favorites = Array.isArray(favData) ? favData.map(p => p.id) : (favData.data ? favData.data.map(p => p.id) : []);
-                            propertiesData = Array.isArray(favData) ? favData : (favData.data || []);
-                            render();
-                        });
-                } else {
-                    fetchPropertiesData();
-                }
-            });
+            if (purposeSelect) {
+                purposeSelect.addEventListener('change', () => { updatePriceFilterOptions(); });
+            }
+            if (gridViewBtn) {
+                gridViewBtn.addEventListener('click', () => { currentView = 'grid'; propertyListContainer.classList.remove('list-view'); updateActiveButtons(); render(); });
+            }
+            if (listViewBtn) {
+                listViewBtn.addEventListener('click', () => { currentView = 'list'; propertyListContainer.classList.add('list-view'); updateActiveButtons(); render(); });
+            }
+            if (sortPriceAscBtn) {
+                sortPriceAscBtn.addEventListener('click', () => { currentSort = { key: 'price', order: 'asc' }; currentPage = 1; updateActiveButtons(); render(); });
+            }
+            if (sortPriceDescBtn) {
+                sortPriceDescBtn.addEventListener('click', () => { currentSort = { key: 'price', order: 'desc' }; currentPage = 1; updateActiveButtons(); render(); });
+            }
+            if (showFavoritesBtn) {
+                showFavoritesBtn.addEventListener('click', () => {
+                    showingOnlyFavorites = !showingOnlyFavorites;
+                    updateActiveButtons();
+                    currentPage = 1;
+                    if (showingOnlyFavorites) {
+                        fetch('/api/favorites/properties')
+                            .then(res => res.json())
+                            .then(favData => {
+                                favorites = Array.isArray(favData) ? favData.map(p => p.id) : (favData.data ? favData.data.map(p => p.id) : []);
+                                propertiesData = Array.isArray(favData) ? favData : (favData.data || []);
+                                render();
+                            });
+                    } else {
+                        fetchPropertiesData();
+                    }
+                });
+            }
             clearCompareBtn.addEventListener('click', clearCompareList);
             // Removido botão e função Mostrar Comparação
             compareNowBtn.addEventListener('click', function() {
