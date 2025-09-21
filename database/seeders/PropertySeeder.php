@@ -16,7 +16,7 @@ class PropertySeeder extends Seeder
         $businessOptionsList = ['Venda', 'Aluguel', 'Temporada'];
         $statusList = ['disponivel', 'indisponivel', 'reservado'];
 
-        for ($i = 1; $i <= 50; $i++) {
+        for ($i = 1; $i <= 25; $i++) {
             $type = $types[array_rand($types)];
             $purpose = $purposes[array_rand($purposes)];
             $cityIndex = array_rand($cities);

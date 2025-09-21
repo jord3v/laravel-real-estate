@@ -68,6 +68,10 @@ class PropertyFormRequest extends FormRequest
             "business_options.season.start_date" => "nullable|date",
             "business_options.season.end_date" => "nullable|date",
 
+            // Permite múltiplos campos dinâmicos em business_options.others
+            "business_options.others" => "nullable|array",
+            "business_options.others.*" => "nullable|string|max:255",
+
             "description" => "nullable|string",
 
             // Regras para a nova etapa de publicação

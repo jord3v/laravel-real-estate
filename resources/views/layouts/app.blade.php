@@ -450,6 +450,123 @@ function initStepNavigation(formNavId, formStepsId, prevBtnId, nextBtnId, saveBt
 
 // Função genérica para consulta de CEP
 function initCepLookup(cepId, addressId, neighborhoodId, cityId, stateId) {
+   // Busca lat/long ao alterar número
+   function registerNumberBlurListener() {
+      const numberInputs = document.querySelectorAll('[name="address[number]"]');
+      numberInputs.forEach(function(numberInput) {
+         // Evita duplicar listener
+         if (!numberInput._numberBlurListener) {
+            console.log('[CEP] Registrando listener para campo número:', numberInput);
+            numberInput.addEventListener('blur', function() {
+               console.log('[CEP] Número preenchido, iniciando consulta...');
+               updateLatLongWithNumber(numberInput);
+            });
+            
+            // Adiciona listener para tecla Enter também
+            numberInput.addEventListener('keypress', function(e) {
+               if (e.key === 'Enter') {
+                  console.log('[CEP] Enter pressionado no número, iniciando consulta...');
+                  updateLatLongWithNumber(numberInput);
+               }
+            });
+            
+            numberInput._numberBlurListener = true;
+         }
+      });
+   }
+   
+   // Função auxiliar para atualizar lat/long com o número
+   function updateLatLongWithNumber(numberInput) {
+      const form = numberInput.closest('form');
+      if (!form) {
+         console.warn('[CEP] Campo número sem form pai.');
+         return;
+      }
+      const cepInput = form.querySelector('[name="address[cep]"]');
+      const addressInput = form.querySelector('[name="address[street]"]');
+      const neighborhoodInput = form.querySelector('[name="address[neighborhood]"]');
+      const cityInput = form.querySelector('[name="address[city]"]');
+      const stateInput = form.querySelector('[name="address[state]"]');
+      
+      // Verifica se todos os campos necessários estão preenchidos
+      if (!cepInput || !cepInput.value || !addressInput || !addressInput.value) {
+         console.warn('[CEP] CEP ou endereço não preenchidos.');
+         return;
+      }
+      
+      let number = numberInput.value.trim();
+      if (!number) {
+         console.warn('[CEP] Número não preenchido.');
+         return;
+      }
+      
+      const fullAddress = `${addressInput.value}${number ? ', ' + number : ''}, ${neighborhoodInput && neighborhoodInput.value ? neighborhoodInput.value : ''}, ${cityInput && cityInput.value ? cityInput.value : ''}, ${stateInput && stateInput.value ? stateInput.value : ''}, ${cepInput.value}`;
+      console.log('[CEP] Consulta Nominatim após preencher número:', fullAddress);
+      
+      fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fullAddress)}&format=json&limit=1`)
+         .then(resp => resp.json())
+         .then(results => {
+            const latInput = form.querySelector('[name="address[lat]"]');
+            const longInput = form.querySelector('[name="address[long]"]');
+            if (results && results.length > 0) {
+               const lat = results[0].lat;
+               const lon = results[0].lon;
+               if (latInput) {
+                  latInput.removeAttribute('disabled');
+                  latInput.value = lat;
+                  latInput.dispatchEvent(new Event('change'));
+                  latInput.setAttribute('disabled', 'disabled');
+               }
+               if (longInput) {
+                  longInput.removeAttribute('disabled');
+                  longInput.value = lon;
+                  longInput.dispatchEvent(new Event('change'));
+                  longInput.setAttribute('disabled', 'disabled');
+               }
+               console.log('[CEP] Lat/Lon atualizados com número:', lat, lon);
+            } else {
+               console.warn('[CEP] Nominatim não retornou resultado para endereço com número.');
+            }
+            if (typeof updateMapFromInputs === 'function') {
+               updateMapFromInputs();
+            }
+         })
+         .catch(function(err) {
+            console.error('[CEP] Erro na consulta Nominatim:', err);
+         });
+   }
+   // Registra ao carregar DOM
+   document.addEventListener('DOMContentLoaded', function() {
+      registerNumberBlurListener();
+   });
+   
+   // Observa mudanças no DOM para campos adicionados dinamicamente
+   const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+         if (mutation.type === 'childList') {
+            mutation.addedNodes.forEach(function(node) {
+               if (node.nodeType === 1) { // Element node
+                  if (node.querySelector && node.querySelector('[name="address[number]"]')) {
+                     registerNumberBlurListener();
+                  }
+               }
+            });
+         }
+      });
+   });
+   
+   // Inicia observação do DOM
+   observer.observe(document.body, {
+      childList: true,
+      subtree: true
+   });
+   
+   // Exponibiliza global para cenários dinâmicos
+   window.registerNumberBlurListener = registerNumberBlurListener;
+   
+   // Chama imediatamente para campos já existentes
+   registerNumberBlurListener();
+   
    const cepInput = document.getElementById(cepId);
    const addressInput = document.getElementById(addressId);
    const neighborhoodInput = neighborhoodId ? document.getElementById(neighborhoodId) : null;
@@ -471,6 +588,63 @@ function initCepLookup(cepId, addressId, neighborhoodId, cityId, stateId) {
                      if (neighborhoodInput) neighborhoodInput.value = data.bairro;
                      cityInput.value = data.localidade;
                      stateInput.value = data.uf;
+
+                     // Registra listeners para o campo número (caso tenha sido adicionado dinamicamente)
+                     registerNumberBlurListener();
+
+                     // Busca lat/long via Nominatim
+                     // Tenta pegar o número do input se existir
+                     let number = '';
+                     const form = cepInput.closest('form');
+                     if (form) {
+                        const numberInput = form.querySelector('[name="address[number]"]');
+                        if (numberInput && numberInput.value) {
+                           number = numberInput.value;
+                        }
+                     }
+                     // Monta o endereço completo para consulta
+                     const fullAddress = `${data.logradouro || ''}${number ? ', ' + number : ''}, ${data.bairro || ''}, ${data.localidade || ''}, ${data.uf || ''}, ${cepInput.value}`;
+                     fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fullAddress)}&format=json`)
+                        .then(resp => resp.json())
+                        .then(results => {
+                           const form = cepInput.closest('form');
+                     const latInput = form ? form.querySelector('[name="address[lat]"]') : null;
+                     const longInput = form ? form.querySelector('[name="address[long]"]') : null;
+                     if (results && results.length > 0) {
+                       const lat = results[0].lat;
+                       const lon = results[0].lon;
+                       if (latInput) {
+                          latInput.removeAttribute('disabled');
+                          latInput.value = lat;
+                          latInput.setAttribute('disabled', 'disabled');
+                       }
+                       if (longInput) {
+                          longInput.removeAttribute('disabled');
+                          longInput.value = lon;
+                          longInput.setAttribute('disabled', 'disabled');
+                       }
+                       if (typeof updateMapFromInputs === 'function') {
+                          updateMapFromInputs();
+                       }
+                     } else {
+                       if (latInput) {
+                          latInput.removeAttribute('disabled');
+                          latInput.value = '';
+                          latInput.setAttribute('disabled', 'disabled');
+                       }
+                       if (longInput) {
+                          longInput.removeAttribute('disabled');
+                          longInput.value = '';
+                          longInput.setAttribute('disabled', 'disabled');
+                       }
+                       // Dispara evento 'change' nos inputs para garantir atualização
+                       if (latInput) latInput.dispatchEvent(new Event('change'));
+                       if (longInput) longInput.dispatchEvent(new Event('change'));
+                       if (typeof updateMapFromInputs === 'function') {
+                          updateMapFromInputs();
+                       }
+                     }
+                        });
                   } else {
                      alert('CEP não encontrado.');
                      addressInput.value = '';

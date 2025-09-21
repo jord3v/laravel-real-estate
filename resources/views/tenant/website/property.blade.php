@@ -84,7 +84,7 @@
                                             </button>
                                             <label class="btn-action compare-label mb-0" title="Comparar">
                                                 <input type="checkbox" class="compare-checkbox" data-property-id="{{$property->id ?? 0}}" style="display:none;">
-                                                <i class="fa-solid fa-balance-scale"></i>
+                                                <i class="fa-solid fa-scale-balanced"></i>
                                             </label>
                                         </div>
                                     </div>
@@ -228,32 +228,75 @@
 </main>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar favoritos da API
+    let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    fetch('/api/favorites')
+        .then(res => res.json())
+        .then(data => {
+            favorites = data.favorites || [];
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            
+            // Atualizar ícone após carregar favoritos da API
+            const favoriteBtn = document.querySelector('.btn-favorite');
+            if (favoriteBtn) {
+                const propertyId = parseInt(favoriteBtn.dataset.propertyId, 10);
+                updateFavoriteIcon(favoriteBtn, favorites, propertyId);
+            }
+        })
+        .catch(error => {
+            console.warn('Erro ao carregar favoritos da API, usando localStorage:', error);
+        });
+
     // Favoritar
     const favoriteBtn = document.querySelector('.btn-favorite');
     if (favoriteBtn) {
         const propertyId = parseInt(favoriteBtn.dataset.propertyId, 10);
-        let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-        function updateFavoriteIcon() {
-            if (favorites.includes(propertyId)) {
-                favoriteBtn.classList.add('favorited');
-                favoriteBtn.querySelector('i').classList.remove('fa-regular');
-                favoriteBtn.querySelector('i').classList.add('fa-solid');
+        
+        function updateFavoriteIcon(btn, favList, propId) {
+            if (favList.includes(propId)) {
+                btn.classList.add('favorited');
+                btn.querySelector('i').classList.remove('fa-regular');
+                btn.querySelector('i').classList.add('fa-solid');
             } else {
-                favoriteBtn.classList.remove('favorited');
-                favoriteBtn.querySelector('i').classList.remove('fa-solid');
-                favoriteBtn.querySelector('i').classList.add('fa-regular');
+                btn.classList.remove('favorited');
+                btn.querySelector('i').classList.remove('fa-solid');
+                btn.querySelector('i').classList.add('fa-regular');
             }
         }
-        updateFavoriteIcon();
+        
+        updateFavoriteIcon(favoriteBtn, favorites, propertyId);
+        
         favoriteBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            if (favorites.includes(propertyId)) {
-                favorites = favorites.filter(id => id !== propertyId);
-            } else {
-                favorites.push(propertyId);
-            }
-            localStorage.setItem('favorites', JSON.stringify(favorites));
-            updateFavoriteIcon();
+            
+            // Usar a mesma lógica do layout - fazer requisição para API
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            fetch('/api/favorites/toggle', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ property_id: propertyId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                favorites = data.favorites || [];
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+                updateFavoriteIcon(favoriteBtn, favorites, propertyId);
+            })
+            .catch(error => {
+                console.error('Erro ao favoritar:', error);
+                // Fallback para localStorage local em caso de erro
+                if (favorites.includes(propertyId)) {
+                    favorites = favorites.filter(id => id !== propertyId);
+                } else {
+                    favorites.push(propertyId);
+                }
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+                updateFavoriteIcon(favoriteBtn, favorites, propertyId);
+            });
         });
     }
 
@@ -263,30 +306,54 @@ document.addEventListener('DOMContentLoaded', function() {
     if (compareCheckbox && compareLabel) {
         const propertyId = parseInt(compareCheckbox.dataset.propertyId, 10);
         let compareList = JSON.parse(localStorage.getItem('compareList') || '[]');
+        const MAX_COMPARE = 4;
+        
         function updateCompareIcon() {
             compareCheckbox.checked = compareList.includes(propertyId);
             compareLabel.classList.toggle('checked', compareCheckbox.checked);
         }
+        
         updateCompareIcon();
+        
         function updateAndRenderCompare() {
             updateCompareIcon();
             updateCompareTray();
             // Se o modal estiver aberto, atualiza imediatamente
             const modal = document.getElementById('compare-modal');
             if (modal && modal.classList.contains('show')) {
-                setTimeout(renderCompareModal, 100); // aguarda localStorage atualizar
+                setTimeout(() => renderCompareModal(), 100); // aguarda localStorage atualizar
             }
         }
+        
         compareLabel.addEventListener('click', function(e) {
             e.preventDefault();
-            compareCheckbox.checked = !compareCheckbox.checked;
-            if (compareCheckbox.checked) {
-                if (!compareList.includes(propertyId) && compareList.length < 4) {
+            
+            const wasChecked = compareCheckbox.checked;
+            const newChecked = !wasChecked;
+            
+            // Usar a mesma lógica do layout
+            const index = compareList.indexOf(propertyId);
+            if (newChecked) {
+                if (index === -1 && compareList.length < MAX_COMPARE) {
                     compareList.push(propertyId);
+                    compareCheckbox.checked = true;
+                } else if (compareList.length >= MAX_COMPARE) {
+                    // Usar a mesma função do layout
+                    if (typeof showCustomToast === 'function') {
+                        showCustomToast('Você pode comparar no máximo 4 imóveis.', 'compare');
+                    } else {
+                        alert('Você pode comparar no máximo 4 imóveis.');
+                    }
+                    compareCheckbox.checked = false;
+                    return;
                 }
             } else {
-                compareList = compareList.filter(id => id !== propertyId);
+                if (index > -1) {
+                    compareList.splice(index, 1);
+                }
+                compareCheckbox.checked = false;
             }
+            
             localStorage.setItem('compareList', JSON.stringify(compareList));
             updateAndRenderCompare();
         });
@@ -318,9 +385,14 @@ document.addEventListener('DOMContentLoaded', function() {
         clearBtn.addEventListener('click', function() {
             localStorage.setItem('compareList', JSON.stringify([]));
             updateCompareTray();
-            if (compareCheckbox) {
-                compareCheckbox.checked = false;
-                compareLabel.classList.remove('checked');
+            // Atualizar ícone de comparação se disponível
+            const checkbox = document.querySelector('.compare-checkbox');
+            const label = document.querySelector('.compare-label');
+            if (checkbox) {
+                checkbox.checked = false;
+            }
+            if (label) {
+                label.classList.remove('checked');
             }
         });
     }
@@ -412,14 +484,6 @@ document.addEventListener('DOMContentLoaded', function() {
         compareNowBtn.addEventListener('click', renderCompareModal);
     }
 
-    // Render modal se compare-tray estiver visível ao carregar
-    document.addEventListener('DOMContentLoaded', function() {
-        const tray = document.getElementById('compare-tray');
-        if (tray && tray.classList.contains('show')) {
-            renderCompareModal();
-        }
-    });
-
     // Fechar modal
     const compareModal = document.getElementById('compare-modal');
     const compareModalCloseBtn = document.getElementById('compare-modal-close-btn');
@@ -428,6 +492,9 @@ document.addEventListener('DOMContentLoaded', function() {
             compareModal.classList.remove('show');
         });
     }
+
+    // Inicializar tray de comparação
+    updateCompareTray();
 });
 </script>
 @endsection
