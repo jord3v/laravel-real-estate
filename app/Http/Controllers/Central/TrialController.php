@@ -46,6 +46,12 @@ class TrialController extends Controller
         $tenant = $this->tenant->create([
             'name' => $request->company_name,
             'email' => $request->email,
+            'phones' => [
+                [
+                    'number' => $request->phone,
+                    'whatsapp' => false
+                ]
+            ],
             'post_signup_login_token' => $token,
             'initial_migration_complete' => false
         ]);

@@ -17,16 +17,16 @@ class Property extends Model implements HasMedia
 
     protected $fillable = [
         'owner_id', 
+        'type_id', // Chave estrangeira para a tabela types
         'code',
-        'type', // Adicione 'type' se ainda não estiver
-        'purpose', // Novo campo
-        'address', // Nova coluna JSON
+        'purpose',
+        'address', // Coluna JSON para endereço completo
         'description', 
         'compositions',
         'dimensions',
-        'characteristics', // Novo campo
+        'characteristics',
         'business_options',
-        'publication', // Novo campo
+        'publication',
         'status',
     ];
 
@@ -58,6 +58,15 @@ class Property extends Model implements HasMedia
     public function owner()
     {
         return $this->belongsTo(Customer::class, 'owner_id');
+    }
+
+    /**
+     * Relacionamento com a tabela types
+     * Um imóvel pertence a um tipo
+     */
+    public function type()
+    {
+        return $this->belongsTo(Type::class, 'type_id');
     }
 
     public function leases()

@@ -46,12 +46,17 @@
                                 <input type="text" name="code" class="form-control @error('code') is-invalid @enderror" value="{{ old('code', $property->code ?? '') }}" required>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label class="form-label">{{ __('Tipo do Imóvel') }}</label>
-                                <select name="type" class="form-select @error('type') is-invalid @enderror">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label mb-0">
+                                        {{ __('Tipo do Imóvel') }}
+                                    </label>
+                                    <a href="#" class="text-decoration-none form-label mb-0 text-primary" onclick="window.openTypesModal(event)">
+                                        Gerenciar
+                                    </a>
+                                </div>
+                                <select name="type_id" id="type-select" class="form-select @error('type_id') is-invalid @enderror">
                                     <option value="">{{ __('Selecione o tipo') }}</option>
-                                    <option value="apartment" {{ old('type', $property->type ?? '') == 'apartment' ? 'selected' : '' }}>{{ __('Apartamento') }}</option>
-                                    <option value="house" {{ old('type', $property->type ?? '') == 'house' ? 'selected' : '' }}>{{ __('Casa') }}</option>
-                                    <option value="commercial" {{ old('type', $property->type ?? '') == 'commercial' ? 'selected' : '' }}>{{ __('Comercial') }}</option>
+                                    {{-- Tipos serão carregados via JavaScript --}}
                                 </select>
                             </div>
                             <div class="col-md-4 mb-3">
@@ -88,10 +93,12 @@ function showPropertyMap(lat, long) {
     var mapContainer = document.getElementById('property-map');
     var notFoundBox = document.getElementById('location-not-found');
     if (!mapContainer || !notFoundBox) return;
+    
     if (lat !== null && lat !== undefined && lat !== '' && long !== null && long !== undefined && long !== '' && !isNaN(lat) && !isNaN(long)) {
         notFoundBox.style.display = "none";
         mapContainer.style.display = "block";
         mapContainer.innerHTML = "";
+        
         setTimeout(function() {
             if (window.propertyMapInstance) {
                 window.propertyMapInstance.remove();
@@ -108,6 +115,16 @@ function showPropertyMap(lat, long) {
                     attribution: '© OpenStreetMap'
                 }).addTo(window.propertyMapInstance);
                 L.marker([lat, long]).addTo(window.propertyMapInstance);
+                
+                // Verifica se o container do mapa está visível e força o redimensionamento
+                const step2 = document.getElementById('step-2');
+                if (step2 && step2.classList.contains('active')) {
+                    setTimeout(function() {
+                        window.propertyMapInstance.invalidateSize();
+                        console.log('Mapa redimensionado após renderização');
+                    }, 100);
+                }
+                
                 console.log('Mapa renderizado!');
             } catch (e) {
                 mapContainer.innerHTML = '<div style="color:red;text-align:center;padding:20px;">Erro ao renderizar mapa!</div>';
@@ -160,6 +177,24 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     // Atualiza o mapa após preenchimento automático do CEP
     setTimeout(updateMapFromInputs, 500);
+    
+    // Observer para detectar quando a aba de localização fica visível
+    const step2 = document.getElementById('step-2');
+    if (step2) {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    if (step2.classList.contains('active') && window.propertyMapInstance) {
+                        setTimeout(function() {
+                            window.propertyMapInstance.invalidateSize();
+                            console.log('Mapa redimensionado pelo observer');
+                        }, 250);
+                    }
+                }
+            });
+        });
+        observer.observe(step2, { attributes: true, attributeFilter: ['class'] });
+    }
 });
 </script>
                         <h3 class="card-title">{{ __('Localização do Imóvel') }}</h3>
@@ -198,8 +233,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="row">
                             <div class="col-12 mb-3">
                                 <label class="form-label">Mapa do Imóvel</label>
-                                <input type="text" name="address[lat]" class="form-control @error('address.lat') is-invalid @enderror" value="{{ old('address.lat', $property->address['lat'] ?? '') }}" readonly>
-                                <input type="text" name="address[long]" class="form-control @error('address.long') is-invalid @enderror" value="{{ old('address.long', $property->address['long'] ?? '') }}" readonly>
+                                <input type="hidden" name="address[lat]" class="form-control @error('address.lat') is-invalid @enderror" value="{{ old('address.lat', $property->address['lat'] ?? '') }}">
+                                <input type="hidden" name="address[long]" class="form-control @error('address.long') is-invalid @enderror" value="{{ old('address.long', $property->address['long'] ?? '') }}">
                                 <div id="location-box" style="width: 100%; min-height: 350px; border-radius: 8px; border: 2px solid #007bff; background: #f8f9fa; margin-top: 16px; display: flex; align-items: center; justify-content: center; position: relative;">
                                     <div id="property-map" style="width: 100%; height: 350px; border-radius: 8px; display: none;"></div>
                                     <div id="location-not-found" style="width: 100%; text-align: center; color: #007bff; font-weight: bold; font-size: 1.2em; position: absolute; left: 0; top: 50%; transform: translateY(-50%);">Localização não encontrada.</div>
@@ -362,9 +397,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="col-3 mb-3">
                                 <label class="form-label">Venc. IPTU</label>
                                 <select name="business_options[iptu_due]" class="form-select">
-                                    <option value="anual" {{ old('business_options.iptu_due', $property->business_options['iptu_due'] ?? '') == 'anual' ? 'selected' : '' }}>Anual</option>
-                                    <option value="mensal" {{ old('business_options.iptu_due', $property->business_options['iptu_due'] ?? '') == 'mensal' ? 'selected' : '' }}>Mensal</option>
-                                    <option value="isento" {{ old('business_options.iptu_due', $property->business_options['iptu_due'] ?? '') == 'isento' ? 'selected' : '' }}>Isento</option>
+                                    <option value="free" {{ old('business_options.iptu_due', $property->business_options['iptu_due'] ?? '') == 'free' ? 'selected' : '' }}>{{ __('Isento') }}</option>
+                                    <option value="weekly" {{ old('business_options.iptu_due', $property->business_options['iptu_due'] ?? '') == 'weekly' ? 'selected' : '' }}>{{ __('Semanal') }}</option>
+                                    <option value="monthly" {{ old('business_options.iptu_due', $property->business_options['iptu_due'] ?? '') == 'monthly' ? 'selected' : '' }}>{{ __('Mensal') }}</option>
                                 </select>
                             </div>
                             <div class="col-3 mb-3">
@@ -592,6 +627,97 @@ document.addEventListener('DOMContentLoaded', function() {
 
     });
 </script>
+
+<script>
+// Variáveis globais para gerenciamento de tipos - devem estar disponíveis imediatamente
+window.currentEditingTypeId = null;
+
+// Função para abrir o modal de tipos - definida no escopo global
+window.openTypesModal = function(event) {
+    // Se o evento existe, previne o comportamento padrão para evitar conflitos
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
+    // Carrega os tipos primeiro
+    if (typeof window.loadTypes === 'function') {
+        window.loadTypes();
+    }
+    
+    // Usa a API nativa do DOM para abrir o modal
+    const modalElement = document.getElementById('typesModal');
+    
+    // Limpa qualquer estado anterior
+    if (typeof window.closeTypesModal === 'function') {
+        window.closeTypesModal();
+    }
+    
+    // Abre o modal
+    setTimeout(() => {
+        if (typeof bootstrap !== 'undefined') {
+            // Usa Bootstrap se disponível
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        } else {
+            // Fallback usando CSS puro
+            modalElement.classList.add('show');
+            modalElement.style.display = 'block';
+            modalElement.setAttribute('aria-hidden', 'false');
+            
+            // Adiciona backdrop
+            const backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            backdrop.id = 'modal-backdrop';
+            document.body.appendChild(backdrop);
+            
+            // Adiciona classe modal-open ao body
+            document.body.classList.add('modal-open');
+        }
+    }, 100);
+};
+
+// Função para fechar o modal de tipos - definida no escopo global
+window.closeTypesModal = function() {
+    const modalElement = document.getElementById('typesModal');
+    
+    // Verifica se Bootstrap está disponível
+    if (typeof bootstrap !== 'undefined') {
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        if (modal) {
+            modal.hide();
+        } else {
+            // Se não há instância, força o fechamento
+            modalElement.classList.remove('show');
+            modalElement.style.display = 'none';
+            modalElement.setAttribute('aria-hidden', 'true');
+        }
+    } else {
+        // Fallback usando classes CSS
+        modalElement.classList.remove('show');
+        modalElement.style.display = 'none';
+        modalElement.setAttribute('aria-hidden', 'true');
+    }
+    
+    // Remove todos os backdrops possíveis (limpeza geral)
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach(backdrop => backdrop.remove());
+    
+    // Remove backdrop específico se existir
+    const specificBackdrop = document.getElementById('modal-backdrop');
+    if (specificBackdrop) {
+        specificBackdrop.remove();
+    }
+    
+    // Remove classe modal-open do body
+    document.body.classList.remove('modal-open');
+    
+    // Remove estilos inline que podem estar interferindo
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+};
+</script>
+
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -674,6 +800,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             savePublishBtn.style.display = index === steps.length - 1 ? 'inline-block' : 'none';
             saveDraftBtn.style.display = index === steps.length - 1 ? 'inline-block' : 'none';
+            
+            // Se estivermos na aba de localização (index 1) e o mapa existe, redimensiona ele
+            if (index === 1 && window.propertyMapInstance) {
+                setTimeout(function() {
+                    window.propertyMapInstance.invalidateSize();
+                    console.log('Mapa redimensionado para a aba de localização');
+                }, 200);
+            }
         }
 
         nextBtn.addEventListener('click', () => {
@@ -695,6 +829,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.preventDefault();
                 currentStepIndex = index;
                 showStep(currentStepIndex);
+                
+                // Se clicou na aba de localização e o mapa existe, força o redimensionamento
+                if (index === 1 && window.propertyMapInstance) {
+                    setTimeout(function() {
+                        window.propertyMapInstance.invalidateSize();
+                        console.log('Mapa redimensionado ao clicar na aba de localização');
+                    }, 300);
+                }
             });
         });
         
@@ -710,4 +852,429 @@ document.addEventListener('DOMContentLoaded', function() {
         showStep(currentStepIndex);
     });
 </script>
+
+<script>
+// Variáveis globais para gerenciamento de tipos
+let currentEditingTypeId = null;
+
+// Função para abrir o modal de tipos
+function openTypesModal(event) {
+    // Se o evento existe, previne o comportamento padrão para evitar conflitos
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
+    // Carrega os tipos primeiro
+    loadTypes();
+    
+    // Usa a API nativa do DOM para abrir o modal
+    const modalElement = document.getElementById('typesModal');
+    
+    // Limpa qualquer estado anterior
+    closeTypesModal();
+    
+    // Abre o modal
+    setTimeout(() => {
+        if (typeof bootstrap !== 'undefined') {
+            // Usa Bootstrap se disponível
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        } else {
+            // Fallback usando CSS puro
+            modalElement.classList.add('show');
+            modalElement.style.display = 'block';
+            modalElement.setAttribute('aria-hidden', 'false');
+            
+            // Adiciona backdrop
+            const backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            backdrop.id = 'modal-backdrop';
+            document.body.appendChild(backdrop);
+            
+            // Adiciona classe modal-open ao body
+            document.body.classList.add('modal-open');
+        }
+    }, 100);
+}
+
+// Função para fechar o modal de tipos
+function closeTypesModal() {
+    const modalElement = document.getElementById('typesModal');
+    
+    // Verifica se Bootstrap está disponível
+    if (typeof bootstrap !== 'undefined') {
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        if (modal) {
+            modal.hide();
+        } else {
+            // Se não há instância, força o fechamento
+            modalElement.classList.remove('show');
+            modalElement.style.display = 'none';
+            modalElement.setAttribute('aria-hidden', 'true');
+        }
+    } else {
+        // Fallback usando classes CSS
+        modalElement.classList.remove('show');
+        modalElement.style.display = 'none';
+        modalElement.setAttribute('aria-hidden', 'true');
+    }
+    
+    // Remove todos os backdrops possíveis (limpeza geral)
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach(backdrop => backdrop.remove());
+    
+    // Remove backdrop específico se existir
+    const specificBackdrop = document.getElementById('modal-backdrop');
+    if (specificBackdrop) {
+        specificBackdrop.remove();
+    }
+    
+    // Remove classe modal-open do body
+    document.body.classList.remove('modal-open');
+    
+    // Remove estilos inline que podem estar interferindo
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+}
+
+// Função para carregar tipos via API
+window.loadTypes = async function() {
+    const loadingEl = document.getElementById('types-loading');
+    const listEl = document.getElementById('types-list');
+    
+    loadingEl.style.display = 'block';
+    listEl.style.display = 'none';
+    
+    try {
+        const response = await fetch('/dashboard/types');
+        const types = await response.json();
+        
+        renderTypesTable(types);
+        updateTypeSelect(types);
+        
+        loadingEl.style.display = 'none';
+        listEl.style.display = 'block';
+    } catch (error) {
+        console.error('Erro ao carregar tipos:', error);
+        showAlert('Erro ao carregar tipos!', 'danger');
+        loadingEl.style.display = 'none';
+    }
+}
+
+// Função para renderizar tabela de tipos
+window.renderTypesTable = function(types) {
+    const tbody = document.getElementById('types-table-body');
+    tbody.innerHTML = '';
+    
+    if (types.length === 0) {
+        // Mostra mensagem quando não há tipos
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td colspan="4" class="text-center text-muted py-4">
+                <em>Nenhum tipo cadastrado ainda.</em>
+            </td>
+        `;
+        tbody.appendChild(row);
+        return;
+    }
+    
+    types.forEach(type => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${type.name}</td>
+            <td>${type.description || '-'}</td>
+            <td>
+                <span class="badge bg-${type.active ? 'success-lt' : 'danger-lt'}">
+                    ${type.active ? 'Ativo' : 'Inativo'}
+                </span>
+            </td>
+            <td class="text-end">
+                <div class="d-flex justify-content-end gap-1">
+                    <button type="button" class="btn btn-sm" onclick="window.editType(${type.id})">
+                        Editar
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="window.deleteType(${type.id})">
+                        Excluir
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Função para atualizar o select de tipos no formulário principal
+function updateTypeSelect(types) {
+    const select = document.getElementById('type-select');
+    const currentValue = select.value;
+    
+    // Valor do imóvel em edição (se houver)
+    const editingTypeId = @json($property->type_id ?? null);
+    
+    // Limpa opções existentes (exceto a primeira)
+    while (select.children.length > 1) {
+        select.removeChild(select.lastChild);
+    }
+    
+    // Adiciona novos tipos
+    types.forEach(type => {
+        if (type.active) {
+            const option = document.createElement('option');
+            option.value = type.id;
+            option.textContent = type.name;
+            
+            // Marca como selecionado se for o tipo do imóvel em edição ou o valor atual
+            if (editingTypeId && editingTypeId == type.id) {
+                option.selected = true;
+            } else if (currentValue == type.id) {
+                option.selected = true;
+            }
+            
+            select.appendChild(option);
+        }
+    });
+}
+
+// Função para editar tipo
+window.editType = async function(typeId) {
+    try {
+        const response = await fetch(`/dashboard/types/${typeId}`);
+        const type = await response.json();
+        
+        document.getElementById('type-name').value = type.name;
+        document.getElementById('type-description').value = type.description || '';
+        document.getElementById('type-active').checked = type.active;
+        
+        window.currentEditingTypeId = typeId;
+        
+        // Atualiza o botão do formulário
+        const submitBtn = document.querySelector('#type-form button[type="submit"]');
+        submitBtn.innerHTML = 'Atualizar Tipo';
+        submitBtn.className = 'btn btn-primary';
+        
+    } catch (error) {
+        console.error('Erro ao carregar tipo:', error);
+        showAlert('Erro ao carregar dados do tipo!', 'danger');
+    }
+}
+
+// Função para cancelar edição
+window.cancelEditType = function() {
+    window.currentEditingTypeId = null;
+    document.getElementById('type-form').reset();
+    document.getElementById('type-active').checked = true;
+    
+    // Restaura o botão do formulário
+    const submitBtn = document.querySelector('#type-form button[type="submit"]');
+    submitBtn.innerHTML = 'Adicionar Tipo';
+    submitBtn.className = 'btn btn-primary';
+}
+
+// Função para excluir tipo
+window.deleteType = async function(typeId) {
+    if (!confirm('Tem certeza que deseja excluir este tipo?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/dashboard/types/${typeId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || "{{ csrf_token() }}"
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert(result.message, 'success');
+            loadTypes(); // Recarrega a lista
+        } else {
+            showAlert(result.message, 'danger');
+        }
+    } catch (error) {
+        console.error('Erro ao excluir tipo:', error);
+        showAlert('Erro ao excluir tipo!', 'danger');
+    }
+}
+
+// Função para mostrar alertas
+function showAlert(message, type = 'info') {
+    // Cria um toast usando o Tabler
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} alert-dismissible`;
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // Adiciona o toast ao topo da página
+    document.body.insertBefore(toast, document.body.firstChild);
+    
+    // Remove automaticamente após 5 segundos
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
+}
+
+// Carrega os tipos quando a página carrega
+document.addEventListener('DOMContentLoaded', function() {
+    // Carrega os tipos para popular o select inicial
+    window.loadTypes();
+    
+    // Event listeners para o modal
+    const modal = document.getElementById('typesModal');
+    
+    // Event listener para quando o modal Bootstrap for fechado
+    modal.addEventListener('hidden.bs.modal', function() {
+        // Força limpeza completa após o Bootstrap fechar o modal
+        window.closeTypesModal();
+    });
+    
+    // Fechar modal com ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.classList.contains('show')) {
+            window.closeTypesModal();
+        }
+    });
+    
+    // Fechar modal clicando no backdrop
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            window.closeTypesModal();
+        }
+    });
+    
+    // Event listener para o formulário de tipo
+    document.getElementById('type-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        console.log('Formulário submetido!');
+        
+        const formData = new FormData(e.target);
+        const data = {
+            name: formData.get('name'),
+            description: formData.get('description'),
+            active: formData.has('active')
+        };
+        
+        console.log('Dados a serem enviados:', data);
+        
+        try {
+            let response;
+            if (window.currentEditingTypeId) {
+                console.log('Atualizando tipo existente:', window.currentEditingTypeId);
+                // Atualizar tipo existente
+                response = await fetch(`/dashboard/types/${window.currentEditingTypeId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify(data)
+                });
+            } else {
+                console.log('Criando novo tipo');
+                // Criar novo tipo
+                response = await fetch('/dashboard/types', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify(data)
+                });
+            }
+            
+            console.log('Response status:', response.status);
+            const result = await response.json();
+            console.log('Response data:', result);
+            
+            if (result.success) {
+                showAlert(result.message, 'success');
+                window.cancelEditType(); // Limpa o formulário
+                window.loadTypes(); // Recarrega a lista
+            } else {
+                showAlert(result.message || 'Erro ao processar solicitação!', 'danger');
+            }
+        } catch (error) {
+            console.error('Erro ao salvar tipo:', error);
+            showAlert('Erro ao salvar tipo!', 'danger');
+        }
+    });
+});
+</script>
+
+{{-- Modal para gerenciar tipos de imóveis --}}
+<div class="modal modal-blur fade" id="typesModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Gerenciar Tipos de Imóveis</h5>
+                <button type="button" class="btn-close" onclick="window.closeTypesModal()" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {{-- Formulário para adicionar novo tipo --}}
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Adicionar Novo Tipo</label>
+                    <form id="type-form">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label required">Nome do Tipo</label>
+                                <input type="text" name="name" id="type-name" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Status</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="active" id="type-active" checked>
+                                    <label class="form-check-label" for="type-active">Ativo</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Descrição</label>
+                            <textarea name="description" id="type-description" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3 text-end">
+                            <button type="button" class="btn btn-secondary" onclick="window.cancelEditType()">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">
+                                Adicionar Tipo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <hr>
+
+                {{-- Lista de tipos existentes --}}
+                <div>
+                    <label class="form-label fw-bold">Tipos Existentes</label>
+                    <div id="types-loading" class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                    </div>
+                    <div id="types-list" style="display: none;">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-vcenter">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Descrição</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="types-table-body">
+                                    {{-- Tipos serão carregados via JavaScript --}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endpush

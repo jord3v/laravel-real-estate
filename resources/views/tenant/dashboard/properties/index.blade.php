@@ -21,6 +21,51 @@
 
 <div class="page-body">
     <div class="container-xl">
+        {{-- Seção de Filtros --}}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h4 class="card-title">Filtros</h4>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="{{ route('properties.index') }}">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Tipo de Imóvel</label>
+                            <select name="type" class="form-select">
+                                <option value="">Todos os tipos</option>
+                                @foreach($types as $type)
+                                    <option value="{{ $type->name }}" {{ request('type') == $type->name ? 'selected' : '' }}>
+                                        {{ $type->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Finalidade</label>
+                            <select name="purpose" class="form-select">
+                                <option value="">Todas as finalidades</option>
+                                <option value="residential" {{ request('purpose') == 'residential' ? 'selected' : '' }}>Residencial</option>
+                                <option value="commercial" {{ request('purpose') == 'commercial' ? 'selected' : '' }}>Comercial</option>
+                                <option value="others" {{ request('purpose') == 'others' ? 'selected' : '' }}>Outros</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="">Todos os status</option>
+                                <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Rascunho</option>
+                                <option value="published" {{ request('status') == 'published' ? 'selected' : '' }}>Publicado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">Filtrar</button>
+                            <a href="{{ route('properties.index') }}" class="btn btn-outline-secondary">Limpar</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <div class="card">
             <div class="list-group list-group-flush list-group-hoverable">
                 @forelse ($properties as $property)
@@ -56,10 +101,13 @@
                             @endif
                         </div>
                         
-                        {{-- Informações principais: Código, Status e Endereço --}}
+                        {{-- Informações principais: Código, Tipo, Status e Endereço --}}
                         <div class="col text-truncate">
                             <div class="d-flex align-items-center mb-1">
                                 <span class="fw-bold me-2">{{ $property->code }}</span>
+                                @if($property->type)
+                                    <span class="badge bg-info-lt me-2">{{ $property->type->name }}</span>
+                                @endif
                                 <span class="badge bg-{{ $property->status == 'published' ? 'success' : 'secondary' }}-lt">{{ ucfirst($property->status) }}</span>
                             </div>
                             <div class="text-muted text-truncate">

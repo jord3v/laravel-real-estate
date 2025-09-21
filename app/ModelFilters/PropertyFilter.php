@@ -19,7 +19,9 @@ class PropertyFilter extends ModelFilter
     public function type($value)
     {
         $values = is_array($value) ? $value : [$value];
-        return $this->whereIn('type', $values);
+        return $this->whereHas('type', function ($query) use ($values) {
+            $query->whereIn('name', $values);
+        });
     }
 
     // Filtro por finalidade
@@ -36,10 +38,20 @@ class PropertyFilter extends ModelFilter
         $values = array_map('intval', $values);
         return $this->where(function ($q) use ($field, $values) {
             foreach ($values as $value) {
-                if ($value === 3) {
-                    $q->orWhereRaw("JSON_EXTRACT(compositions, '$.$field') >= ?", [$value]);
+                if ($value >= 3) {
+                    // Para 3+, busca todos os imóveis com 3 ou mais
+                    $q->orWhere(function ($subQ) use ($field, $value) {
+                        $subQ->whereRaw("CAST(JSON_UNQUOTE(JSON_EXTRACT(compositions, '$.{$field}')) AS UNSIGNED) >= ?", [$value])
+                             ->whereNotNull('compositions')
+                             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(compositions, '$.{$field}')) IS NOT NULL");
+                    });
                 } else {
-                    $q->orWhereJsonContains("compositions->$field", $value);
+                    // Para valores exatos (1 ou 2)
+                    $q->orWhere(function ($subQ) use ($field, $value) {
+                        $subQ->whereRaw("CAST(JSON_UNQUOTE(JSON_EXTRACT(compositions, '$.{$field}')) AS UNSIGNED) = ?", [$value])
+                             ->whereNotNull('compositions')
+                             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(compositions, '$.{$field}')) IS NOT NULL");
+                    });
                 }
             }
         });

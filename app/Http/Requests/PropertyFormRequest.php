@@ -28,12 +28,12 @@ class PropertyFormRequest extends FormRequest
 
         return [
             "owner_id" => "required|exists:customers,id",
+            "type_id" => "required|exists:types,id",
             "code" => [
                 "required",
                 "string",
                 Rule::unique('properties', 'code')->ignore($propertyId),
             ],
-            "type" => "required|string",
             "purpose" => "required|string",
 
             // Validação para o campo JSON de endereço
@@ -42,6 +42,11 @@ class PropertyFormRequest extends FormRequest
             "address.neighborhood" => "required|string|max:255",
             "address.city" => "required|string|max:255",
             "address.state" => "required|string|max:255",
+            "address.number" => "nullable|string|max:20",
+            "address.complement" => "nullable|string|max:255",
+            "address.lat" => "nullable|numeric|between:-90,90",
+            "address.long" => "nullable|numeric|between:-180,180",
+            "address.show_map" => "nullable|boolean",
 
             // Validação para os campos JSON aninhados
             "compositions.bedrooms" => "nullable|integer",
@@ -67,10 +72,11 @@ class PropertyFormRequest extends FormRequest
             "business_options.season.period" => "nullable|string|in:daily,weekly,monthly",
             "business_options.season.start_date" => "nullable|date",
             "business_options.season.end_date" => "nullable|date",
-
-            // Permite múltiplos campos dinâmicos em business_options.others
-            "business_options.others" => "nullable|array",
-            "business_options.others.*" => "nullable|string|max:255",
+            "business_options.condo_value" => "nullable|numeric|min:0",
+            "business_options.iptu_due" => "nullable|string|in:free,weekly,monthly",
+            "business_options.iptu_value" => "nullable|numeric|min:0",
+            "business_options.other_fees" => "nullable|string|max:255",
+            
 
             "description" => "nullable|string",
 
@@ -91,6 +97,9 @@ class PropertyFormRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
+            'address' => array_merge($this->input('address', []), [
+                'show_map' => $this->has('address.show_map'),
+            ]),
             'business_options' => array_merge($this->input('business_options', []), [
                 'sale' => array_merge($this->input('business_options.sale', []), [
                     'show_price' => $this->has('business_options.sale.show_price'),

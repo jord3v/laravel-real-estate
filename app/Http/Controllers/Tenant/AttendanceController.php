@@ -8,81 +8,176 @@ use App\Models\Customer;
 use App\Models\Property;
 use App\Http\Requests\AttendanceStoreRequest;
 use App\Http\Requests\AttendanceUpdateRequest;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class AttendanceController extends Controller
 {
     public function __construct(
-        private Attendance $attendance,
-        private Property $property,
-        private Customer $customer
+        private readonly Attendance $attendance,
+        private readonly Property $property,
+        private readonly Customer $customer
     ) {}
 
-    public function index(): \Illuminate\View\View
+    /**
+     * Exibe a lista de atendimentos.
+     */
+    public function index(): View
     {
         $attendances = $this->attendance->with(['property', 'customer'])
             ->withCount('history')
             ->latest()
-            ->paginate(10);
+            ->paginate(15);
+
         return view('tenant.dashboard.attendances.index', compact('attendances'));
     }
 
-    public function create(): \Illuminate\View\View
+    /**
+     * Mostra o formulário para criar um novo atendimento.
+     */
+    public function create(): View
     {
-        $properties = $this->property->all();
-        $customers = $this->customer->all();
-        $statuses = $this->attendance->distinct()->pluck('status');
+        $properties = $this->property->select(['id', 'code', 'description'])
+            ->where('status', 'published')
+            ->get();
+            
+        $customers = $this->customer->select(['id', 'name', 'email'])
+            ->orderBy('name')
+            ->get();
+            
+        $statuses = $this->getAvailableStatuses();
+
         return view('tenant.dashboard.attendances.create', compact('properties', 'customers', 'statuses'));
     }
 
-    public function store(AttendanceStoreRequest $request): \Illuminate\Http\RedirectResponse
+    /**
+     * Armazena um novo atendimento no banco de dados.
+     */
+    public function store(AttendanceStoreRequest $request): RedirectResponse
     {
-    $attendance = $this->attendance->create($request->validated());
-    $attendance->history()->create(['new_status' => $request->validated()['status']]);
-    return redirect()->route('attendances.index')->with('success', 'Atendimento cadastrado com sucesso!');
+        try {
+            $attendance = $this->attendance->create($request->validated());
+            
+            // Cria histórico inicial
+            $attendance->history()->create([
+                'new_status' => $request->validated()['status'],
+                'old_status' => null,
+                'new_notes' => $request->validated()['notes'] ?? null,
+                'old_notes' => null,
+            ]);
+
+            return redirect()
+                ->route('attendances.index')
+                ->with('success', 'Atendimento cadastrado com sucesso!');
+                
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Erro ao cadastrar atendimento. Tente novamente.');
+        }
     }
 
-    public function show(Attendance $attendance): \Illuminate\View\View
+    /**
+     * Exibe um atendimento específico.
+     */
+    public function show(Attendance $attendance): View
     {
+        $attendance->load(['property', 'customer', 'history' => function ($query) {
+            $query->latest();
+        }]);
+
         return view('tenant.dashboard.attendances.show', compact('attendance'));
     }
 
-    public function edit(Attendance $attendance): \Illuminate\View\View
+    /**
+     * Mostra o formulário para editar um atendimento.
+     */
+    public function edit(Attendance $attendance): View
     {
-        $properties = $this->property->all();
-        $customers = $this->customer->all();
-        $statuses = $this->attendance->distinct()->pluck('status'); // Pega os status únicos
-        
+        $properties = $this->property->select(['id', 'code', 'description'])
+            ->where('status', 'published')
+            ->get();
+            
+        $customers = $this->customer->select(['id', 'name', 'email'])
+            ->orderBy('name')
+            ->get();
+            
+        $statuses = $this->getAvailableStatuses();
+
         return view('tenant.dashboard.attendances.edit', compact('attendance', 'properties', 'customers', 'statuses'));
     }
 
     /**
      * Atualiza um atendimento no banco de dados.
      */
-    public function update(AttendanceUpdateRequest $request, Attendance $attendance)
+    public function update(AttendanceUpdateRequest $request, Attendance $attendance): RedirectResponse
     {
-    $oldStatus = $attendance->status;
-    $oldNotes = $attendance->notes;
-    $attendance->update($request->validated());
+        try {
+            $oldStatus = $attendance->status;
+            $oldNotes = $attendance->notes;
+            
+            $attendance->update($request->validated());
 
-        if ($oldStatus !== $attendance->status || $oldNotes !== $attendance->notes) {
-            $attendance->history()->create([
-                'old_status' => $oldStatus,
-                'new_status' => $attendance->status,
-                'old_notes' => $oldNotes,
-                'new_notes' => $attendance->notes,
-            ]);
+            // Cria histórico apenas se houve mudanças significativas
+            if ($this->hasSignificantChanges($oldStatus, $oldNotes, $attendance)) {
+                $attendance->history()->create([
+                    'old_status' => $oldStatus,
+                    'new_status' => $attendance->status,
+                    'old_notes' => $oldNotes,
+                    'new_notes' => $attendance->notes,
+                ]);
+            }
+
+            return redirect()
+                ->route('attendances.index')
+                ->with('success', 'Atendimento atualizado com sucesso!');
+                
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Erro ao atualizar atendimento. Tente novamente.');
         }
-
-        return redirect()->route('attendances.index')->with('success', 'Atendimento atualizado com sucesso!');
     }
 
     /**
      * Exclui um atendimento do banco de dados.
      */
-    public function destroy(Attendance $attendance)
+    public function destroy(Attendance $attendance): RedirectResponse
     {
-        $attendance->delete();
+        try {
+            $attendance->delete();
 
-        return redirect()->route('attendances.index')->with('success', 'Atendimento excluído com sucesso!');
+            return redirect()
+                ->route('attendances.index')
+                ->with('success', 'Atendimento excluído com sucesso!');
+                
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Erro ao excluir atendimento. Tente novamente.');
+        }
+    }
+
+    /**
+     * Retorna os status disponíveis para atendimentos.
+     */
+    private function getAvailableStatuses(): array
+    {
+        return [
+            'pending' => 'Pendente',
+            'in_progress' => 'Em Andamento',
+            'completed' => 'Concluído',
+            'cancelled' => 'Cancelado',
+        ];
+    }
+
+    /**
+     * Verifica se houve mudanças significativas que justificam criar histórico.
+     */
+    private function hasSignificantChanges(string $oldStatus, ?string $oldNotes, Attendance $attendance): bool
+    {
+        return $oldStatus !== $attendance->status || $oldNotes !== $attendance->notes;
     }
 }

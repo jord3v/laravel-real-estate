@@ -692,7 +692,7 @@
                 const propertyType = propertyTypeEl.value;
                 const purpose = purposeEl.value;
                 const location = locationEl.value;
-                const priceRange = (document.getElementById('price-range')?.value || '0-999999999').split('-');
+                const priceRange = (document.getElementById('price-range')?.value || '0-99999999').split('-');
                 const minPrice = priceRange[0];
                 const maxPrice = priceRange[1];
                 const bedrooms = Array.from(document.querySelectorAll('input[name="bedrooms[]"]:checked')).map(cb => cb.value);
@@ -707,7 +707,7 @@
                 if (purpose) params.append('purpose', purpose);
                 if (location) params.append('location', location);
                 if (minPrice && minPrice !== '0') params.append('minPrice', minPrice);
-                if (maxPrice && maxPrice !== '999999999') params.append('maxPrice', maxPrice);
+                if (maxPrice && maxPrice !== '99999999') params.append('maxPrice', maxPrice);
                 if (perPage && perPage !== 6) params.append('per_page', perPage);
                 if (page && page !== 1) params.append('page', page);
                 bedrooms.forEach(val => params.append('bedrooms[]', val));
@@ -774,9 +774,9 @@
     // ...existing code...
         const MAX_COMPARE = 4;
         const priceRanges = {
-            Venda: [{ value: '0-999999999', text: 'Qualquer valor' }, { value: '0-500000', text: 'Até R$ 500.000' }, { value: '500001-1000000', text: 'R$ 500 mil - R$ 1 milhão' }, { value: '1000001-2000000', text: 'R$ 1 milhão - R$ 2 milhões' }, { value: '2000001-5000000', text: 'R$ 2 milhões - R$ 5 milhões' }, { value: '5000001-999999999', text: 'Acima de R$ 5 milhões' }],
-            Aluguel: [{ value: '0-999999999', text: 'Qualquer valor' }, { value: '0-2000', text: 'Até R$ 2.000' }, { value: '2001-5000', text: 'R$ 2.000 - R$ 5.000' }, { value: '5001-10000', text: 'R$ 5.000 - R$ 10.000' }, { value: '10001-999999999', text: 'Acima de R$ 10.000' }],
-            Temporada: [{ value: '0-999999999', text: 'Qualquer valor (diária)' }, { value: '0-500', text: 'Até R$ 500' }, { value: '501-1500', text: 'R$ 500 - R$ 1.500' }, { value: '1501-3000', text: 'R$ 1.500 - R$ 3.000' }, { value: '3001-999999999', text: 'Acima de R$ 3.000' }]
+            Venda: [{ value: '1-99999999', text: 'Qualquer valor' }, { value: '1-500000', text: 'Até R$ 500.000' }, { value: '500001-1000000', text: 'R$ 500 mil - R$ 1 milhão' }, { value: '1000001-2000000', text: 'R$ 1 milhão - R$ 2 milhões' }, { value: '2000001-5000000', text: 'R$ 2 milhões - R$ 5 milhões' }, { value: '5000001-99999999', text: 'Acima de R$ 5 milhões' }],
+            Aluguel: [{ value: '1-99999999', text: 'Qualquer valor' }, { value: '1-2000', text: 'Até R$ 2.000' }, { value: '2001-5000', text: 'R$ 2.000 - R$ 5.000' }, { value: '5001-10000', text: 'R$ 5.000 - R$ 10.000' }, { value: '10001-99999999', text: 'Acima de R$ 10.000' }],
+            Temporada: [{ value: '1-99999999', text: 'Qualquer valor (diária)' }, { value: '1-500', text: 'Até R$ 500' }, { value: '501-1500', text: 'R$ 500 - R$ 1.500' }, { value: '1501-3000', text: 'R$ 1.500 - R$ 3.000' }, { value: '3001-99999999', text: 'Acima de R$ 3.000' }]
         };
         const formatFullCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
         const applyPhoneMask = (event) => {
@@ -1273,6 +1273,74 @@
             updatePriceFilterOptions();
             updateActiveButtons();
             updateCompareTray();
+            
+            // Função para popular campos do formulário com parâmetros da URL
+            function populateFormFromURL() {
+                const urlParams = new URLSearchParams(window.location.search);
+                
+                // Popular tipo de imóvel
+                const propertyTypeEl = document.getElementById('property-type');
+                if (propertyTypeEl && urlParams.has('type')) {
+                    propertyTypeEl.value = urlParams.get('type');
+                }
+                
+                // Popular finalidade
+                const purposeEl = document.getElementById('purpose-select');
+                if (purposeEl && urlParams.has('purpose')) {
+                    purposeEl.value = urlParams.get('purpose');
+                }
+                
+                // Popular localização
+                const locationEl = document.getElementById('location-code');
+                if (locationEl && urlParams.has('location')) {
+                    locationEl.value = urlParams.get('location');
+                }
+                
+                // Popular faixa de preço
+                const priceRangeEl = document.getElementById('price-range');
+                if (priceRangeEl && urlParams.has('minPrice') && urlParams.has('maxPrice')) {
+                    const minPrice = urlParams.get('minPrice');
+                    const maxPrice = urlParams.get('maxPrice');
+                    priceRangeEl.value = `${minPrice}-${maxPrice}`;
+                }
+                
+                // Popular itens por página
+                if (itemsPerPageSelect && urlParams.has('per_page')) {
+                    const perPage = urlParams.get('per_page');
+                    itemsPerPageSelect.value = perPage;
+                    propertiesPerPage = parseInt(perPage, 10);
+                }
+                
+                // Popular página atual
+                if (urlParams.has('page')) {
+                    currentPage = parseInt(urlParams.get('page'), 10);
+                }
+                
+                // Popular checkboxes de quartos
+                const bedroomCheckboxes = document.querySelectorAll('input[name="bedrooms[]"]');
+                const selectedBedrooms = urlParams.getAll('bedrooms[]');
+                bedroomCheckboxes.forEach(checkbox => {
+                    checkbox.checked = selectedBedrooms.includes(checkbox.value);
+                });
+                
+                // Popular checkboxes de banheiros
+                const bathroomCheckboxes = document.querySelectorAll('input[name="bathrooms[]"]');
+                const selectedBathrooms = urlParams.getAll('bathrooms[]');
+                bathroomCheckboxes.forEach(checkbox => {
+                    checkbox.checked = selectedBathrooms.includes(checkbox.value);
+                });
+                
+                // Popular checkboxes de vagas
+                const parkingCheckboxes = document.querySelectorAll('input[name="parking[]"]');
+                const selectedParking = urlParams.getAll('parking[]');
+                parkingCheckboxes.forEach(checkbox => {
+                    checkbox.checked = selectedParking.includes(checkbox.value);
+                });
+            }
+            
+            // Popular campos do formulário com parâmetros da URL
+            populateFormFromURL();
+            
             // Ao carregar, sempre inicia no modo padrão (não favoritos)
             showingOnlyFavorites = false;
             fetchPropertiesData();

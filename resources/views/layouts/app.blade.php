@@ -74,20 +74,23 @@
       @push('scripts')
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        new TomSelect("#select-status", {
-            create: true,
-            sortField: {
-                field: "text",
-                direction: "asc"
-            },
-            plugins: {
-                remove_button: {
-                    title: 'Remover'
-                }
-            },
-            // Adicione esta linha para o tema
-            theme: 'bootstrap5' 
-        });
+        const selectStatus = document.querySelector("#select-status");
+        if (selectStatus) {
+            new TomSelect("#select-status", {
+                create: true,
+                sortField: {
+                    field: "text",
+                    direction: "asc"
+                },
+                plugins: {
+                    remove_button: {
+                        title: 'Remover'
+                    }
+                },
+                // Adicione esta linha para o tema
+                theme: 'bootstrap5' 
+            });
+        }
     });
 </script>
 @endpush
@@ -106,15 +109,14 @@
                <span class="navbar-toggler-icon"></span>
                </button>
                <div class="navbar-brand navbar-brand-autodark">
-                  <a href="." aria-label="Tabler"
-                     >
-                  <img src="./static/logo.svg" class="navbar-brand-image" alt="Tabler" />
+                  <a href="." aria-label="Painel Administrativo">
+                     Painel Administrativo
                   </a>
                </div>
                <div class="navbar-nav flex-row d-lg-none">
                   <div class="nav-item dropdown">
                      <a href="#" class="nav-link d-flex lh-1 p-0 px-2" data-bs-toggle="dropdown" aria-label="Open user menu">
-                        <span class="avatar avatar-sm" style="background-image: url(./static/avatars/000m.jpg)"> </span>
+                        <span class="avatar avatar-sm" style=""> </span>
                         <div class="d-none d-xl-block ps-2">
                            <div>{{ auth()->user()->name }}</div>
                            
@@ -332,7 +334,7 @@
                   </div>
                   <div class="nav-item dropdown">
                      <a href="#" class="nav-link d-flex lh-1 p-0 px-2" data-bs-toggle="dropdown" aria-label="Open user menu">
-                        <span class="avatar avatar-sm" style="background-image: url(./static/avatars/000m.jpg)"> </span>
+                        <span class="avatar avatar-sm" style=""> </span>
                         <div class="d-none d-xl-block ps-2">
                            <div>{{ auth()->user()->name }}</div>
                            {{auth()->user()->roles()->get()->pluck('name')->join(', ')}}
@@ -512,16 +514,16 @@ function initCepLookup(cepId, addressId, neighborhoodId, cityId, stateId) {
                const lat = results[0].lat;
                const lon = results[0].lon;
                if (latInput) {
-                  latInput.removeAttribute('disabled');
+                  
                   latInput.value = lat;
                   latInput.dispatchEvent(new Event('change'));
-                  latInput.setAttribute('disabled', 'disabled');
+                  
                }
                if (longInput) {
-                  longInput.removeAttribute('disabled');
+                  
                   longInput.value = lon;
                   longInput.dispatchEvent(new Event('change'));
-                  longInput.setAttribute('disabled', 'disabled');
+                  
                }
                console.log('[CEP] Lat/Lon atualizados com número:', lat, lon);
             } else {
@@ -614,28 +616,28 @@ function initCepLookup(cepId, addressId, neighborhoodId, cityId, stateId) {
                        const lat = results[0].lat;
                        const lon = results[0].lon;
                        if (latInput) {
-                          latInput.removeAttribute('disabled');
+                          
                           latInput.value = lat;
-                          latInput.setAttribute('disabled', 'disabled');
+                          
                        }
                        if (longInput) {
-                          longInput.removeAttribute('disabled');
+                          
                           longInput.value = lon;
-                          longInput.setAttribute('disabled', 'disabled');
+                          
                        }
                        if (typeof updateMapFromInputs === 'function') {
                           updateMapFromInputs();
                        }
                      } else {
                        if (latInput) {
-                          latInput.removeAttribute('disabled');
+                          
                           latInput.value = '';
-                          latInput.setAttribute('disabled', 'disabled');
+                          
                        }
                        if (longInput) {
-                          longInput.removeAttribute('disabled');
+                          
                           longInput.value = '';
-                          longInput.setAttribute('disabled', 'disabled');
+                          
                        }
                        // Dispara evento 'change' nos inputs para garantir atualização
                        if (latInput) latInput.dispatchEvent(new Event('change'));

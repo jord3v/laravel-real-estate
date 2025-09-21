@@ -11,6 +11,7 @@ use App\Http\Controllers\Tenant\PropertyController;
 use App\Http\Controllers\Tenant\TrialController;
 use App\Http\Controllers\Tenant\WebsiteController;
 use App\Http\Controllers\Tenant\FavoriteController;
+use App\Http\Controllers\Tenant\TypeController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Features\UserImpersonation;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
@@ -58,6 +59,8 @@ Route::middleware([
             Route::post('{property}/media/{media}/main', [PropertyController::class, 'setMainMedia'])->name('media.set-main');
             Route::post('{property}/media/sort', [PropertyController::class, 'sortMedia'])->name('media.sort');
         });
+
+        Route::resource('/types', TypeController::class);
 
         // Agrupando os outros recursos em uma única linha para clareza
         Route::resource('attendances', AttendanceController::class)->names('attendances');

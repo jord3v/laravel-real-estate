@@ -42,9 +42,16 @@ class Gemini
     {
         $prompt = "Crie uma descrição de imóvel atraente e profissional para um site de imobiliária. A descrição deve ter no máximo 3 parágrafos e destacar os seguintes pontos:\n\n";
         
+        // Buscar o nome do tipo pelo type_id
+        $typeName = 'Não informado';
+        if (isset($propertyData['type_id'])) {
+            $type = \App\Models\Type::find($propertyData['type_id']);
+            $typeName = $type ? $type->name : 'Não informado';
+        }
+        
         // Dados básicos e de localização
         $prompt .= "Código do imóvel: {$propertyData['code']}\n";
-        $prompt .= "Tipo: {$propertyData['type']}\n";
+        $prompt .= "Tipo: {$typeName}\n";
         $prompt .= "Finalidade: {$propertyData['purpose']}\n";
         $prompt .= "Localização: {$propertyData['address']['neighborhood']}, {$propertyData['address']['city']} - {$propertyData['address']['state']}\n";
         

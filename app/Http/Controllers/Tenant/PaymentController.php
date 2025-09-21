@@ -3,87 +3,181 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
-use App\Models\Payment;
-use App\Models\Lease;
+use App\Http\Requests\PaymentReceiveRequest;
 use App\Http\Requests\PaymentStoreRequest;
 use App\Http\Requests\PaymentUpdateRequest;
-use App\Http\Requests\PaymentReceiveRequest;
-use DB;
-use Exception;
+use App\Models\Lease;
+use App\Models\Payment;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class PaymentController extends Controller
 {
     public function __construct(
-        private Payment $payment,
-        private Lease $lease
+        private readonly Payment $payment,
+        private readonly Lease $lease
     ) {}
 
-    public function index(): \Illuminate\View\View
+    /**
+     * Lista todos os pagamentos.
+     */
+    public function index(): View
     {
-        $payments = $this->payment->with('lease.renter', 'lease.property')->latest()->get();
+        $payments = $this->payment
+            ->with(['lease.lessee', 'lease.property'])
+            ->latest()
+            ->paginate(20);
+
         return view('tenant.dashboard.payments.index', compact('payments'));
     }
 
-    public function create(): \Illuminate\View\View
+    /**
+     * Exibe o formulário de criação de pagamento.
+     */
+    public function create(): View
     {
-        $leases = $this->lease->where('status', 'active')->get();
+        $leases = $this->getActiveLeases();
         return view('tenant.dashboard.payments.create', compact('leases'));
     }
 
-    public function store(PaymentStoreRequest $request): \Illuminate\Http\RedirectResponse
+    /**
+     * Salva um novo pagamento.
+     */
+    public function store(PaymentStoreRequest $request): RedirectResponse
     {
-    $this->payment->create($request->validated());
-    return redirect()->route('payments.index')->with('status', 'Pagamento registrado com sucesso!');
+        try {
+            $this->payment->create($request->validated());
+
+            return redirect()
+                ->route('payments.index')
+                ->with('success', 'Pagamento registrado com sucesso!');
+
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Erro ao registrar pagamento. Tente novamente.');
+        }
     }
 
-    public function edit(Payment $payment): \Illuminate\View\View
+    /**
+     * Exibe o formulário de edição de pagamento.
+     */
+    public function edit(Payment $payment): View
     {
-        $leases = $this->lease->where('status', 'active')->get();
+        $leases = $this->getActiveLeases();
         return view('tenant.dashboard.payments.edit', compact('payment', 'leases'));
     }
 
-    public function update(PaymentUpdateRequest $request, Payment $payment): \Illuminate\Http\RedirectResponse
+    /**
+     * Atualiza um pagamento existente.
+     */
+    public function update(PaymentUpdateRequest $request, Payment $payment): RedirectResponse
     {
-    $payment->update($request->validated());
-    return redirect()->route('payments.index')
-             ->with('status', 'Pagamento atualizado com sucesso!');
+        try {
+            $payment->update($request->validated());
+
+            return redirect()
+                ->route('payments.index')
+                ->with('success', 'Pagamento atualizado com sucesso!');
+
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Erro ao atualizar pagamento. Tente novamente.');
+        }
     }
 
     /**
      * Remove um pagamento do banco de dados.
      */
-    public function destroy(Payment $payment)
+    public function destroy(Payment $payment): RedirectResponse
     {
-        $payment->delete();
+        try {
+            if ($payment->status === 'paid') {
+                return redirect()
+                    ->back()
+                    ->with('error', 'Não é possível excluir um pagamento já quitado.');
+            }
 
-        return redirect()->route('payments.index')
-                         ->with('status', 'Pagamento excluído com sucesso!');
+            $payment->delete();
+
+            return redirect()
+                ->route('payments.index')
+                ->with('success', 'Pagamento excluído com sucesso!');
+
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Erro ao excluir pagamento. Tente novamente.');
+        }
     }
 
     /**
-     * Atualiza um pagamento no banco de dados.
+     * Processa o recebimento de um pagamento.
      */
-    public function receive(PaymentReceiveRequest $request, Lease $lease, Payment $payment)
+    public function receive(PaymentReceiveRequest $request, Lease $lease, Payment $payment): RedirectResponse
     {
         try {
-            DB::transaction(function () use ($request, $payment) {
-                $data = $request->validated();
-                $status = ($data['paid_amount'] < $payment->amount) ? 'partially_overdue' : 'paid';
-                $payment->update([
-                    'paid_at' => $data['paid_at'],
-                    'paid_amount' => $data['paid_amount'],
-                    'payment_method' => $data['payment_method'],
-                    'transaction_code' => $data['transaction_code'],
-                    'notes' => $data['notes'],
-                    'status' => $status,
-                ]);
-            });
+            $this->processPaymentReceipt($payment, $request->validated());
 
-            return back()->with('success', 'Pagamento recebido com sucesso!');
+            return redirect()
+                ->back()
+                ->with('success', 'Pagamento recebido com sucesso!');
 
-        // Removido catch de ValidationException, pois o FormRequest já lida com erros de validação automaticamente
-        } catch (Exception $e) {
-            return back()->withInput()->withErrors(['error' => 'Ocorreu um erro ao receber o pagamento: ' . $e->getMessage()]);
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Erro ao processar recebimento. Tente novamente.');
         }
+    }
+
+    /**
+     * Obtém contratos ativos para os formulários.
+     */
+    private function getActiveLeases()
+    {
+        return $this->lease
+            ->where('status', 'active')
+            ->with(['lessee', 'property'])
+            ->get();
+    }
+
+    /**
+     * Processa o recebimento do pagamento em uma transação.
+     */
+    private function processPaymentReceipt(Payment $payment, array $data): void
+    {
+        DB::transaction(function () use ($payment, $data) {
+            $status = $this->calculatePaymentStatus($payment, $data['paid_amount']);
+            
+            $payment->update([
+                'paid_at' => $data['paid_at'],
+                'paid_amount' => $data['paid_amount'],
+                'payment_method' => $data['payment_method'],
+                'transaction_code' => $data['transaction_code'] ?? null,
+                'notes' => $data['notes'] ?? null,
+                'status' => $status,
+            ]);
+        });
+    }
+
+    /**
+     * Calcula o status do pagamento baseado no valor pago.
+     */
+    private function calculatePaymentStatus(Payment $payment, float $paidAmount): string
+    {
+        if ($paidAmount >= $payment->amount) {
+            return 'paid';
+        }
+        
+        if ($paidAmount > 0) {
+            return 'partially_paid';
+        }
+        
+        return $payment->status; // Mantém o status atual se não foi pago nada
     }
 }

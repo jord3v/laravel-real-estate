@@ -17,9 +17,9 @@
                         <div class="col-lg-3 col-md-6">
                             <select class="form-select" id="property-type">
                                 <option value="">Tipo de Imóvel</option>
-                                <option>Apartamento</option>
-                                <option>Casa</option>
-                                <option>Terreno</option>
+                                @foreach($types as $type)
+                                    <option value="{{ $type->name }}">{{ $type->name }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="col-lg-3 col-md-6">

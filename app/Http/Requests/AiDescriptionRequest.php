@@ -23,13 +23,17 @@ class AiDescriptionRequest extends FormRequest
     {
         return [
             'code' => 'required|string',
-            'type' => 'required|string',
+            'type_id' => 'required|exists:types,id',
             'purpose' => 'required|string',
             'address.cep' => 'nullable|string',
             'address.street' => 'required|string',
+            'address.number' => 'nullable|string',
+            'address.complement' => 'nullable|string',
             'address.neighborhood' => 'required|string',
             'address.city' => 'required|string',
             'address.state' => 'required|string',
+            'address.lat' => 'nullable|numeric',
+            'address.long' => 'nullable|numeric',
             
             'compositions.bedrooms' => 'nullable|integer',
             'compositions.suites' => 'nullable|integer',
@@ -54,7 +58,12 @@ class AiDescriptionRequest extends FormRequest
             'business_options.season.price' => 'nullable|numeric',
             'business_options.season.show_price' => 'nullable',
             'business_options.season.period' => 'nullable|string',
-            'business_options.season.available_dates' => 'nullable|string',
+            'business_options.season.start_date' => 'nullable|date',
+            'business_options.season.end_date' => 'nullable|date',
+            'business_options.condo_value' => 'nullable|numeric',
+            'business_options.iptu_due' => 'nullable|string',
+            'business_options.iptu_value' => 'nullable|numeric',
+            'business_options.other_fees' => 'nullable|string',
         ];
     }
 }

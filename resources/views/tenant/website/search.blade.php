@@ -38,9 +38,9 @@
                                     <label for="property-type" class="form-label">Tipo de Imóvel:</label>
                                     <select class="form-select" id="property-type">
                                         <option value="">Tipo de Imóvel</option>
-                                        <option>Apartamento</option>
-                                        <option>Casa</option>
-                                        <option>Terreno</option>
+                                        @foreach($types as $type)
+                                            <option value="{{ $type->name }}">{{ $type->name }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 <div class="col-12">

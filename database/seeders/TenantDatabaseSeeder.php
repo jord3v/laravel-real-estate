@@ -15,7 +15,8 @@ class TenantDatabaseSeeder extends Seeder
     {
         $this->call([
             TenantRolesAndPermissionsSeeder::class,
-            PropertySeeder::class
+            TypeSeeder::class,
+            //PropertySeeder::class
         ]);
     }
 }

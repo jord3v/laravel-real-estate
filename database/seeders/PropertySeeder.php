@@ -3,12 +3,25 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Property;
+use App\Models\Type;
 
 class PropertySeeder extends Seeder
 {
     public function run(): void
     {
-        $types = ['Apartamento', 'Casa', 'Terreno'];
+        // Buscar todos os tipos ativos disponíveis
+        $typeIds = Type::where('active', true)->pluck('id')->toArray();
+        
+        // Se não existirem tipos ativos, buscar todos os tipos
+        if (empty($typeIds)) {
+            $typeIds = Type::pluck('id')->toArray();
+        }
+        
+        // Se ainda não houver tipos, criar erro informativo
+        if (empty($typeIds)) {
+            throw new \Exception('Nenhum tipo encontrado. Execute o TypeSeeder primeiro.');
+        }
+        
         $purposes = ['Venda', 'Aluguel', 'Temporada'];
         $cities = ['São Paulo', 'Rio de Janeiro', 'Belo Horizonte', 'Curitiba', 'Florianópolis', 'Porto Alegre', 'Salvador', 'Recife', 'Fortaleza', 'Brasília'];
         $states = ['SP', 'RJ', 'MG', 'PR', 'SC', 'RS', 'BA', 'PE', 'CE', 'DF'];
@@ -17,15 +30,17 @@ class PropertySeeder extends Seeder
         $statusList = ['disponivel', 'indisponivel', 'reservado'];
 
         for ($i = 1; $i <= 25; $i++) {
-            $type = $types[array_rand($types)];
+            $typeId = $typeIds[array_rand($typeIds)];
+            $type = Type::find($typeId);
+            $typeName = $type->name;
             $purpose = $purposes[array_rand($purposes)];
             $cityIndex = array_rand($cities);
             $city = $cities[$cityIndex];
             $state = $states[$cityIndex];
-            $bedrooms = $type === 'Terreno' ? 0 : rand(1, 5);
-            $bathrooms = $type === 'Terreno' ? 0 : rand(1, 4);
-            $parking = $type === 'Terreno' ? 0 : rand(0, 3);
-            $area = $type === 'Terreno' ? rand(200, 2000) : rand(40, 400);
+            $bedrooms = $typeName === 'Terreno' ? 0 : rand(1, 5);
+            $bathrooms = $typeName === 'Terreno' ? 0 : rand(1, 4);
+            $parking = $typeName === 'Terreno' ? 0 : rand(0, 3);
+            $area = $typeName === 'Terreno' ? rand(200, 2000) : rand(40, 400);
             $characteristics = array_rand(array_flip($characteristicsList), rand(2, 5));
             $status = $statusList[array_rand($statusList)];
             $address = [
@@ -37,9 +52,9 @@ class PropertySeeder extends Seeder
             ];
             $compositions = [
                 'bedrooms' => $bedrooms,
-                'suites' => $type === 'Terreno' ? 0 : rand(0, 2),
+                'suites' => $typeName === 'Terreno' ? 0 : rand(0, 2),
                 'bathrooms' => $bathrooms,
-                'living_rooms' => $type === 'Terreno' ? 0 : rand(1, 2),
+                'living_rooms' => $typeName === 'Terreno' ? 0 : rand(1, 2),
                 'car_spaces' => $parking,
             ];
             $dimensions = [
@@ -74,8 +89,8 @@ class PropertySeeder extends Seeder
                 'end_date' => now()->addDays(rand(31,90))->format('Y-m-d'),
             ];
             Property::create([
-                'code' => strtoupper(substr($type, 0, 2)) . str_pad($i, 3, '0', STR_PAD_LEFT),
-                'type' => $type,
+                'code' => strtoupper(substr($typeName, 0, 2)) . str_pad($i, 3, '0', STR_PAD_LEFT),
+                'type_id' => $typeId,
                 'purpose' => $purpose,
                 'address' => $address,
                 'description' => 'Imóvel gerado automaticamente para testes.',

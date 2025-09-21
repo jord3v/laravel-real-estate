@@ -7,6 +7,7 @@ use App\Http\Requests\AiDescriptionRequest;
 use App\Http\Requests\PropertyFormRequest;
 use App\Models\Customer;
 use App\Models\Property;
+use App\Models\Type;
 use App\Services\Gemini;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -20,14 +21,51 @@ class PropertyController extends Controller
      */
     public function show($id)
     {
-    $property = Property::findOrFail($id);
-    $tenant = tenant();
-    return view('tenant.website.property', compact('property', 'tenant'));
+        $query = Property::where('id', $id);
+        $property = $this->applyPublicationRules($query)->firstOrFail();
+            
+        $tenant = tenant();
+        return view('tenant.website.property', compact('property', 'tenant'));
     }
     public function __construct(
         private Property $property,
         private Customer $customer
     ) {}
+
+    /**
+     * Aplica as regras de publicação para imóveis no site público.
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    private function applyPublicationRules($query)
+    {
+        $now = now();
+        
+        return $query
+            // Apenas imóveis publicados
+            ->where('status', 'published')
+            // Deve ter marcado "divulgar no meu site"
+            ->where(function ($q) {
+                $q->whereJsonContains('publication->my_site', true);
+            })
+            // Aplicar regras de período
+            ->where(function ($q) use ($now) {
+                $q->where(function ($subQ) use ($now) {
+                    // Cenário 1: Remover manualmente (period_type = 'manual')
+                    $subQ->whereJsonContains('publication->period_type', 'manual');
+                })->orWhere(function ($subQ) use ($now) {
+                    // Cenário 2: Definir prazo (period_type = 'range')
+                    $subQ->whereJsonContains('publication->period_type', 'range')
+                      ->where(function ($dateQ) use ($now) {
+                          // Data de início: deve ser <= data atual
+                          $dateQ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(publication, '$.start_date')) <= ?", [$now->format('Y-m-d')])
+                               // Data de fim: deve ser >= data atual
+                               ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(publication, '$.end_date')) >= ?", [$now->format('Y-m-d')]);
+                      });
+                });
+            });
+    }
 
     /**
      * Retorna os imóveis em formato JSON para o site público.
@@ -36,8 +74,9 @@ class PropertyController extends Controller
     {
         $perPage = (int) request('per_page', 6);
         $page = (int) request('page', 1);
-        $properties = Property::filter(request()->all())
-            ->with('media')
+        
+        $query = Property::filter(request()->all())->with('media', 'type');
+        $properties = $this->applyPublicationRules($query)
             ->latest()
             ->paginate($perPage, ['*'], 'page', $page);
 
@@ -45,7 +84,7 @@ class PropertyController extends Controller
             $images = $property->getMedia('property')->map(fn($media) => $media->getUrl('preview'))->toArray();
             return [
                 'id' => $property->id,
-                'title' => $property->title ?? $property->description,
+                'title' => $property->type->name,
                 'code' => $property->code,
                 'purpose' => $property->purpose,
                 'price' => $property->business_options['sale']['price'] ?? $property->business_options['rental']['price'] ?? $property->business_options['season']['price'] ?? null,
@@ -68,16 +107,36 @@ class PropertyController extends Controller
         ]);
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $properties = $this->property->with('owner')->latest()->paginate(15);
-        return view('tenant.dashboard.properties.index', compact('properties'));
+        $query = $this->property->with('owner', 'type');
+        
+        // Aplicar filtros
+        if ($request->filled('type')) {
+            $query->whereHas('type', function ($q) use ($request) {
+                $q->where('name', $request->type);
+            });
+        }
+        
+        if ($request->filled('purpose')) {
+            $query->where('purpose', $request->purpose);
+        }
+        
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        $properties = $query->latest()->paginate(15);
+        $types = Type::active()->ordered()->get();
+        
+        return view('tenant.dashboard.properties.index', compact('properties', 'types'));
     }
 
     public function create(): View
     {
         $owners = $this->customer->all();
-        return view('tenant.dashboard.properties.create', compact('owners'));
+        $types = Type::active()->ordered()->get();
+        return view('tenant.dashboard.properties.create', compact('owners', 'types'));
     }
 
     public function store(PropertyFormRequest $request): RedirectResponse
@@ -89,7 +148,8 @@ class PropertyController extends Controller
     public function edit(Property $property): View
     {
         $owners = $this->customer->all();
-        return view('tenant.dashboard.properties.edit', compact('property', 'owners'));
+        $types = Type::active()->ordered()->get();
+        return view('tenant.dashboard.properties.edit', compact('property', 'owners', 'types'));
     }
 
     public function update(PropertyFormRequest $request, Property $property): RedirectResponse
